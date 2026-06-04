@@ -1,36 +1,136 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
+## 시작
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+# DB 설계
+## 테이블 구성
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+     User
+    - 회원 정보
+    - 로그인 계정 (비밀번호 md5 해쉬처리?)
+    - 계정 생성 날짜
+    - 게시글, 댓글, 좋아요, 북마크의 주체
+    
+    Post
+    - 게시글
+    - 작성 시간
+    - 작성자 User와 연결
+    
+    Comment
+    - 댓글
+    - 작성 시간
+    - 게시글과 작성자 User에 연결
+    - 대댓글 구조까지 고려 가능
+    
+    PostLike
+    - 게시글 좋아요
+    - 한 사용자가 한 게시글에 한 번만 좋아요 가능
+    
+    Bookmark
+    - 게시글 북마크
+    - 한 사용자가 한 게시글을 한 번만 북마크 가능
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+prisma/schema.prisma에 코드 넣고 실행
+```bash
+npx prisma format
+npx prisma migrate dev --name init
+npx prisma generate
+```
 
-## Learn More
+.env 포트 확인. 51214가 아니고 5432임
 
-To learn more about Next.js, take a look at the following resources:
+# 예상구조?
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+    assignment1/
+    ├─ app/
+    │  ├─ api/
+    │  │  ├─ auth/
+    │  │  │  ├─ login/
+    │  │  │  │  └─ route.ts
+    │  │  │  ├─ logout/
+    │  │  │  │  └─ route.ts
+    │  │  │  └─ register/
+    │  │  │     └─ route.ts
+    │  │  │
+    │  │  ├─ posts/
+    │  │  │  ├─ route.ts
+    │  │  │  └─ [postId]/
+    │  │  │     ├─ route.ts
+    │  │  │     ├─ comments/
+    │  │  │     │  └─ route.ts
+    │  │  │     ├─ like/
+    │  │  │     │  └─ route.ts
+    │  │      │     └─ bookmark/
+    │  │  │        └─ route.ts
+    │  │      │
+    │  │  └─ users/
+    │  │     └─ me/
+    │  │        └─ route.ts
+    │  │
+    │  ├─ posts/
+    │  │  ├─ page.tsx
+    │  │  ├─ new/
+    │  │  │  └─ page.tsx
+    │  │  └─ [postId]/
+    │  │     ├─ page.tsx
+    │  │     └─ edit/
+    │  │        └─ page.tsx
+    │  │
+    │  ├─ login/
+    │  │  └─ page.tsx
+    │  ├─ register/
+    │  │  └─ page.tsx
+    │  ├─ layout.tsx
+    │  └─ page.tsx
+    │
+    ├─ components/
+    │  ├─ common/
+    │  ├─ layout/
+    │  ├─ post/
+    │  ├─ comment/
+    │  └─ auth/
+    │
+    ├─ lib/
+    │  ├─ generated/
+    │  │  └─ prisma/
+    │  ├─ prisma.ts
+    │  ├─ auth.ts
+    │  ├─ password.ts
+    │  ├─ session.ts
+    │  └─ validations/
+    │     ├─ auth.ts
+    │     ├─ post.ts
+    │     └─ comment.ts
+    │
+    ├─ services/
+    │  ├─ auth.service.ts
+    │  ├─ post.service.ts
+    │  ├─ comment.service.ts
+    │  ├─ like.service.ts
+    │  └─ bookmark.service.ts
+    │
+    ├─ repositories/
+    │  ├─ user.repository.ts
+    │  ├─ post.repository.ts
+    │  ├─ comment.repository.ts
+    │  ├─ post-like.repository.ts
+    │  └─ bookmark.repository.ts
+    │
+    ├─ types/
+    │  ├─ auth.ts
+    │  ├─ post.ts
+    │  └─ comment.ts
+    │
+    ├─ prisma/
+    │  ├─ schema.prisma
+    │  └─ migrations/
+    │
+    ├─ public/
+    ├─ .env
+    ├─ .env.example
+    ├─ package.json
+    ├─ tsconfig.json
+    ├─ eslint.config.mjs
+    ├─ postcss.config.mjs
+    └─ next.config.ts
