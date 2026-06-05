@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
+//유저 정보 가져오기
 export async function GET() {
   const user = await getCurrentUser();
 
