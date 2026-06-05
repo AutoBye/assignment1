@@ -134,3 +134,30 @@ npx prisma generate
     ├─ eslint.config.mjs
     ├─ postcss.config.mjs
     └─ next.config.ts
+
+---
+
+    1. DB 영역
+        - prisma/schema.prisma
+        - lib/prisma.ts
+        - lib/generated/prisma
+
+    2. 인증 공통 로직
+       - lib/password.ts
+       - lib/session.ts
+       - lib/auth.ts
+
+    3. API 영역
+       - app/api/auth/register/route.ts
+       - app/api/auth/login/route.ts
+       - app/api/auth/logout/route.ts
+       - app/api/auth/me/route.ts
+
+    4. 화면 영역
+       - app/page.tsx
+       - app/login/page.tsx
+       - app/register/page.tsx
+       - components/home/PopularPostsSection.tsx
+       - components/home/RecentPostsSection.tsx
+
+---

@@ -1,6 +1,9 @@
 import Link from "next/link";
 import PopularPostsSection from "@/components/home/PopularPostsSection";
 import RecentPostsSection from "@/components/home/RecentPostsSection";
+import { getCurrentUser } from "@/lib/auth";
+
+// 서버 컴포넌트임
 
 const popularPosts = [
     {
@@ -42,7 +45,10 @@ const recentPosts = [
     },
 ];
 
-export default function Home() {
+export default async function Home() {
+    // 서버 컴포넌트라서 서버에서 쿠키를 읽고 DB 조회 가능
+    const currentUser = await getCurrentUser();
+
     return (
         <div className="min-h-screen bg-gray-100">
             <header className="border-b bg-white">
@@ -53,8 +59,21 @@ export default function Home() {
 
                     <nav className="flex gap-4">
                         <Link href="/posts">게시글</Link>
-                        <Link href="/login">로그인</Link>
-                        <Link href="/register">회원가입</Link>
+
+                        {currentUser ? (
+                            <>
+                                <span>{currentUser.name}님</span>
+
+                                <form action="/api/auth/logout" method="post">
+                                    <button type="submit">로그아웃</button>
+                                </form>
+                            </>
+                        ) : (
+                            <>
+                                <Link href="/login">로그인</Link>
+                                <Link href="/register">회원가입</Link>
+                            </>
+                        )}
                     </nav>
                 </div>
             </header>
