@@ -233,6 +233,15 @@ export default function PostDetailClient({ postId, currentUser }: PostDetailClie
         </Link>
 
         {isAuthor && (
+            <Link
+                href={`/posts/${post.id}/edit`}
+                className="rounded border px-4 py-2"
+            >
+              수정
+            </Link>
+        )}
+
+        {isAuthor && (
             <button
                 type="button"
                 onClick={handleDeletePost}
