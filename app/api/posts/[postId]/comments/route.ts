@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
+const COMMENTS_PER_PAGE = 5;
+
 type CommentsRouteContext = {
   params: Promise<{
     postId: string;
@@ -45,6 +47,16 @@ function getOptionalStringValue(value: unknown) {
   }
 
   return trimmedValue;
+}
+
+function getPageNumber(value: string | null) {
+  const pageNumber = Number(value);
+
+  if (!Number.isInteger(pageNumber) || pageNumber < 1) {
+    return 1;
+  }
+
+  return pageNumber;
 }
 
 // GET /api/posts/[postId]/comments
@@ -89,6 +101,23 @@ export async function GET(
       );
     }
 
+    const { searchParams } = new URL(_request.url);
+    const requestedPage = getPageNumber(searchParams.get("page"));
+
+    const totalRootCommentCount = await prisma.comment.count({
+      where: {
+        postId,
+        parentId: null,
+      },
+    });
+
+    const totalPages = Math.max(
+      1,
+      Math.ceil(totalRootCommentCount / COMMENTS_PER_PAGE),
+    );
+
+    const currentPage = Math.min(requestedPage, totalPages);
+
     // 댓글 쿼리
     const comments = await prisma.comment.findMany({
       where: {
@@ -96,11 +125,14 @@ export async function GET(
         parentId: null,
       },
       orderBy: {
-        createdAt: "asc",
+        createdAt: "desc",
       },
+      skip: (currentPage - 1) * COMMENTS_PER_PAGE,
+      take: COMMENTS_PER_PAGE,
       select: {
         id: true,
         content: true,
+        parentId: true,
         createdAt: true,
         updatedAt: true,
         author: {
@@ -140,6 +172,12 @@ export async function GET(
           replies: [],
         })),
       })),
+      pagination: {
+        currentPage,
+        totalPages,
+        totalRootCommentCount,
+        commentsPerPage: COMMENTS_PER_PAGE,
+      },
     });
   } catch (error) {
     console.log(error);
