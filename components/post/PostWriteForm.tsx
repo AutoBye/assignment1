@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { SubmitEventHandler } from "react";
 
+type CreatePostResponse = {
+  message?: string;
+  post?: {
+    id: string;
+  };
+};
+
 export default function PostWriteForm() {
   const router = useRouter();
 
@@ -19,10 +26,10 @@ export default function PostWriteForm() {
     setMessage("");
     setIsLoading(true);
 
-	// TODO - 글 작성 후 게시글 상세 페이지로 이동
-	  // 현재는 메인 페이지로 이동
+    // DONE - 글 작성 후 게시글 상세 페이지로 이동
+    // 현재는 메인 페이지로 이동
     try {
-      const response = await fetch("/api/posts", {
+      const response = await fetch(`/api/posts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -33,19 +40,19 @@ export default function PostWriteForm() {
         }),
       });
 
-      const data = (await response.json()) as {
-        message?: string;
-        post?: {
-          id: string;
-        };
-      };
+      const data = (await response.json()) as CreatePostResponse;
 
       if (!response.ok) {
         setMessage(data.message ?? "게시글 작성에 실패했습니다.");
         return;
       }
 
-      router.replace("/");
+      if (!data.post) {
+        setMessage("게시글 작성 응답이 올바르지 않습니다.");
+        return;
+      }
+
+      router.replace(`/posts/${data.post.id}`);
       router.refresh();
     } catch {
       setMessage("게시글 작성 요청 중 오류가 발생했습니다.");
