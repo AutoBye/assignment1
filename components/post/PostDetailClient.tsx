@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import CommentSection from "@/components/comments/CommentSection";
 
 type CurrentUser = {
   id: string;
@@ -148,6 +149,19 @@ export default function PostDetailClient({ postId, currentUser }: PostDetailClie
     }
   }
 
+  function handleCommentCountChange(amount: number) {
+    setPost((currentPost) => {
+      if (!currentPost) {
+        return currentPost;
+      }
+
+      return {
+        ...currentPost,
+        commentCount: Math.max(0, currentPost.commentCount + amount),
+      };
+    });
+  }
+
   // 로딩중 JSX
   if (isLoading) {
     return (
@@ -157,7 +171,7 @@ export default function PostDetailClient({ postId, currentUser }: PostDetailClie
     );
   }
 
-  // 응답 JSX
+  // 응답x JSX
   if (message) {
     return (
       <section className="rounded border bg-white p-6">
@@ -252,6 +266,11 @@ export default function PostDetailClient({ postId, currentUser }: PostDetailClie
             </button>
         )}
       </div>
+      <CommentSection
+          postId={post.id}
+          currentUser={currentUser}
+          onCommentCountChange={handleCommentCountChange}
+      />
     </section>
   );
 }
