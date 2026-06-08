@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Pagination from "@/components/post/pagination";
 
 type PostListItem = {
   id: string;
@@ -15,10 +16,12 @@ type PostListItem = {
 };
 
 type PostListProps = {
-  posts: PostListItem[];
+    posts: PostListItem[];
+    currentPage: number;
+    totalPages: number;
 };
 
-export default function PostList({ posts }: PostListProps) {
+export default function PostList({ posts, currentPage, totalPages }: PostListProps) {
   if (posts.length === 0) {
     return (
       <section className="rounded border bg-white p-6">
@@ -82,6 +85,7 @@ export default function PostList({ posts }: PostListProps) {
           </article>
         ))}
       </div>
+        <Pagination currentPage={currentPage} totalPages={totalPages} />
     </section>
   );
 }
