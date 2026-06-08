@@ -10,7 +10,6 @@ export const runtime = "nodejs";
 // -> 로그인 확인
 // -> 제목, 내용 검사
 // -> posts 테이블에 게시글 저장
-
 export async function POST(request: NextRequest) {
   try {
     const currentUser = await getCurrentUser();
@@ -79,9 +78,6 @@ export async function POST(request: NextRequest) {
     }
 
     // 글 생성
-    // post : title , content, authorId
-    // authorId : id, title, content, createdAt, author
-    // author : id, name, email
     const post = await prisma.post.create({
       data: {
         title,
@@ -124,5 +120,69 @@ export async function POST(request: NextRequest) {
         },
     );
   } finally {
+  }
+}
+
+
+// GET /api/posts
+// -> 게시글 목록 조회
+export async function GET() {
+  try {
+
+    // 여러개 조회. 최신순
+    const posts = await prisma.post.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        author : {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        _count: {
+          select: {
+            comments: true,
+            likes: true,
+            bookmarks: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({
+      posts: posts.map((post) => ({
+        id: post.id,
+        title: post.title,
+        content: post.content,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt,
+        author: post.author,
+        commentCount: post._count.comments,
+        likeCount: post._count.likes,
+        bookmarkCount: post._count.bookmarks,
+      })),
+    })
+
+  } catch (error) {
+    console.log(error);
+
+    return NextResponse.json(
+        {
+          message: "게시글 목록 조회 중 오류가 발생했습니다."
+        },
+        {
+          status: 500,
+        },
+    );
+  } finally {
+
   }
 }
