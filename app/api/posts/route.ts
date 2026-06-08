@@ -17,12 +17,12 @@ export async function POST(request: NextRequest) {
     // 로그인 확인
     if (!currentUser) {
       return NextResponse.json(
-          {
-            message: "로그인이 필요합니다.",
-          },
-          {
-            status: 401,
-          },
+        {
+          message: "로그인이 필요합니다.",
+        },
+        {
+          status: 401,
+        },
       );
     }
 
@@ -44,36 +44,36 @@ export async function POST(request: NextRequest) {
 
     if (!title || !content) {
       return NextResponse.json(
-          {
-            message: "제목과 내용을 모두 입력해주세요.",
-          },
-          {
-            status: 400,
-          },
+        {
+          message: "제목과 내용을 모두 입력해주세요.",
+        },
+        {
+          status: 400,
+        },
       );
     }
 
     // 제목 길이 확인
     if (title.length < 2 || title.length > 200) {
       return NextResponse.json(
-          {
-            message: "제목은 2자 이상 200자 이하로 입력해주세요.",
-          },
-          {
-            status: 400,
-          },
+        {
+          message: "제목은 2자 이상 200자 이하로 입력해주세요.",
+        },
+        {
+          status: 400,
+        },
       );
     }
 
     // 내용 길이 확인
     if (content.length < 2) {
       return NextResponse.json(
-          {
-            message: "내용은 2자 이상 입력해주세요.",
-          },
-          {
-            status: 400,
-          },
+        {
+          message: "내용은 2자 이상 입력해주세요.",
+        },
+        {
+          status: 400,
+        },
       );
     }
 
@@ -100,35 +100,33 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-        {
-          message: "게시글이 작성되었습니다.",
-          post,
-        },
-        {
-          status: 201,
-        },
+      {
+        message: "게시글이 작성되었습니다.",
+        post,
+      },
+      {
+        status: 201,
+      },
     );
   } catch (error) {
     console.log(error);
 
     return NextResponse.json(
-        {
-          message: "게시글 작성 중 오류가 발생했습니다.",
-        },
-        {
-          status: 500,
-        },
+      {
+        message: "게시글 작성 중 오류가 발생했습니다.",
+      },
+      {
+        status: 500,
+      },
     );
   } finally {
   }
 }
 
-
 // GET /api/posts
 // -> 게시글 목록 조회
 export async function GET() {
   try {
-
     // 여러개 조회. 최신순
     const posts = await prisma.post.findMany({
       orderBy: {
@@ -140,7 +138,7 @@ export async function GET() {
         content: true,
         createdAt: true,
         updatedAt: true,
-        author : {
+        author: {
           select: {
             id: true,
             name: true,
@@ -169,20 +167,18 @@ export async function GET() {
         likeCount: post._count.likes,
         bookmarkCount: post._count.bookmarks,
       })),
-    })
-
+    });
   } catch (error) {
     console.log(error);
 
     return NextResponse.json(
-        {
-          message: "게시글 목록 조회 중 오류가 발생했습니다."
-        },
-        {
-          status: 500,
-        },
+      {
+        message: "게시글 목록 조회 중 오류가 발생했습니다.",
+      },
+      {
+        status: 500,
+      },
     );
   } finally {
-
   }
 }

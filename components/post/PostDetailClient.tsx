@@ -4,6 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+type CurrentUser = {
+  id: string;
+  email: string;
+  name: string;
+};
+
 type PostDetail = {
   id: string;
   title: string;
@@ -27,6 +33,11 @@ type PostDetailResponse = {
 
 type PostDetailClientProps = {
   postId: string;
+  currentUser: CurrentUser | null;
+};
+
+type DeletePostResponse = {
+  message?: string;
 };
 
 function formatDate(value: string) {
@@ -41,13 +52,15 @@ function formatDate(value: string) {
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
-export default function PostDetailClient({ postId }: PostDetailClientProps) {
+export default function PostDetailClient({ postId, currentUser }: PostDetailClientProps) {
   const router = useRouter();
 
   const [post, setPost] = useState<PostDetail | null>(null);
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
+  // 글 자세히보기 관련 Effect
   useEffect(() => {
     const abortController = new AbortController();
 
@@ -89,6 +102,7 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
         }
       }
     }
+
     void fetchPost();
 
     return () => {
@@ -96,7 +110,45 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
     };
   }, [postId]);
 
-  // 로딩중
+  async function handleDeletePost() {
+    // 글 존재 체크
+    if (!post) {
+      return;
+    }
+
+    const confirmed = window.confirm("정말 이 게시글을 삭제하시겠습니까?");
+
+    // 삭제 취소
+    if (!confirmed) {
+      return;
+    }
+
+    setMessage("");
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch(`/api/posts/${post.id}`, {
+        method: "DELETE",
+      });
+
+      const data = (await response.json()) as DeletePostResponse;
+
+      if (!response.ok) {
+        setMessage(data.message ?? "게시글 삭제에 실패했습니다.");
+        return;
+      }
+
+      router.replace("/posts");
+      router.refresh();
+    } catch (error) {
+      setMessage("게시글 삭제 요청 중 오류가 발생했습니다.");
+      console.log(error);
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  // 로딩중 JSX
   if (isLoading) {
     return (
       <section className="rounded border bg-white p-6">
@@ -105,7 +157,7 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
     );
   }
 
-  // 응답
+  // 응답 JSX
   if (message) {
     return (
       <section className="rounded border bg-white p-6">
@@ -130,7 +182,7 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
     );
   }
 
-  // 게시글 없음
+  // 게시글 없음 JSX
   if (!post) {
     return (
       <section className="rounded border bg-white p-6">
@@ -139,6 +191,10 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
     );
   }
 
+  // 삭제용 작성자 확인
+  const isAuthor = currentUser?.id === post.author.id;
+
+  // 응답 JSX
   return (
     <section className="rounded border bg-white p-6">
       <div className="mb-4 flex items-center justify-between">
@@ -175,6 +231,17 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
         <Link href="/" className="rounded bg-blue-500 px-4 py-2 text-white">
           목록으로
         </Link>
+
+        {isAuthor && (
+            <button
+                type="button"
+                onClick={handleDeletePost}
+                disabled={isDeleting}
+                className="rounded bg-red-500 px-4 py-2 text-white disabled:bg-gray-400"
+            >
+              {isDeleting ? "삭제 중..." : "삭제"}
+            </button>
+        )}
       </div>
     </section>
   );
