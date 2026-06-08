@@ -90,6 +90,25 @@ export async function GET(
       );
     }
 
+    const currentUser = await getCurrentUser();
+    let likedByCurrentUser = false;
+
+    if (currentUser) {
+      const existingLike = await prisma.postLike.findUnique({
+        where: {
+          postId_userId: {
+            postId,
+            userId: currentUser.id,
+          },
+        },
+        select: {
+          postId: true,
+        },
+      });
+
+      likedByCurrentUser = existingLike !== null;
+    }
+
     return NextResponse.json({
       post: {
         id: post.id,
@@ -101,6 +120,7 @@ export async function GET(
         commentCount: post._count.comments,
         likeCount: post._count.likes,
         bookmarkCount: post._count.bookmarks,
+        likedByCurrentUser,
       },
     });
   } catch (error) {

@@ -12,6 +12,7 @@ type CommentsRouteContext = {
 
 type CreateCommentRequestBody = {
   content?: unknown;
+  parentId?: unknown;
 };
 
 function isUUID(value: unknown) {
@@ -20,7 +21,7 @@ function isUUID(value: unknown) {
   }
 
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      value,
+    value,
   );
 }
 
@@ -30,6 +31,20 @@ function getStringValue(value: unknown) {
   }
 
   return value.trim();
+}
+
+function getOptionalStringValue(value: unknown) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  return trimmedValue;
 }
 
 // GET /api/posts/[postId]/comments
@@ -62,6 +77,7 @@ export async function GET(
         id: true,
       },
     });
+
     if (!post) {
       return NextResponse.json(
         {
@@ -94,11 +110,36 @@ export async function GET(
             email: true,
           },
         },
+        replies: {
+          orderBy: {
+            createdAt: "asc",
+          },
+          select: {
+            id: true,
+            content: true,
+            parentId: true,
+            createdAt: true,
+            updatedAt: true,
+            author: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
       },
     });
 
     return NextResponse.json({
-      comments,
+      comments: comments.map((comment) => ({
+        ...comment,
+        replies: comment.replies.map((reply) => ({
+          ...reply,
+          replies: [],
+        })),
+      })),
     });
   } catch (error) {
     console.log(error);
@@ -174,6 +215,7 @@ export async function POST(
     // 내용 검증
     const body = (await request.json()) as CreateCommentRequestBody;
     const content = getStringValue(body.content);
+    const parentId = getOptionalStringValue(body.parentId);
     if (!content) {
       return NextResponse.json(
         {
@@ -195,16 +237,74 @@ export async function POST(
       );
     }
 
+    if (parentId) {
+      if (!isUUID(parentId)) {
+        return NextResponse.json(
+          {
+            message: "올바르지 않은 부모 댓글 ID입니다.",
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+      const parentComment = await prisma.comment.findUnique({
+        where: {
+          id: parentId,
+        },
+        select: {
+          id: true,
+          postId: true,
+          parentId: true,
+        },
+      });
+
+      if (!parentComment) {
+        return NextResponse.json(
+          {
+            message: "부모 댓글을 찾을 수 없습니다.",
+          },
+          {
+            status: 404,
+          },
+        );
+      }
+
+      if (parentComment.postId !== postId) {
+        return NextResponse.json(
+          {
+            message: "현재 게시글의 댓글에만 답글을 작성할 수 있습니다.",
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+
+      if (parentComment.parentId !== null) {
+        return NextResponse.json(
+          {
+            message: "대댓글에는 다시 답글을 작성할 수 없습니다.",
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+    }
+
     // 댓글 create
     const comment = await prisma.comment.create({
       data: {
         content,
         postId,
         authorId: currentUser.id,
+        parentId,
       },
       select: {
         id: true,
         content: true,
+        parentId: true,
         createdAt: true,
         updatedAt: true,
         author: {
@@ -219,8 +319,11 @@ export async function POST(
 
     return NextResponse.json(
       {
-        message: "댓글이 작성되었습니다.",
-        comment,
+        message: parentId ? "답글이 작성되었습니다." : "댓글이 작성되었습니다.",
+        comment: {
+          ...comment,
+          replies: [],
+        },
       },
       {
         status: 201,

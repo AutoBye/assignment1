@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import CommentSection from "@/components/comments/CommentSection";
+import LikeButton from "@/components/post/LikeButton";
 
 type CurrentUser = {
   id: string;
@@ -25,6 +26,7 @@ type PostDetail = {
   commentCount: number;
   likeCount: number;
   bookmarkCount: number;
+  likedByCurrentUser: boolean;
 };
 
 type PostDetailResponse = {
@@ -162,6 +164,20 @@ export default function PostDetailClient({ postId, currentUser }: PostDetailClie
     });
   }
 
+  function handleLikeChange(likeCount: number, liked: boolean) {
+    setPost((currentPost) => {
+      if (!currentPost) {
+        return currentPost;
+      }
+
+      return {
+        ...currentPost,
+        likeCount,
+        likedByCurrentUser: liked,
+      };
+    });
+  }
+
   // 로딩중 JSX
   if (isLoading) {
     return (
@@ -245,6 +261,15 @@ export default function PostDetailClient({ postId, currentUser }: PostDetailClie
         <Link href="/" className="rounded bg-blue-500 px-4 py-2 text-white">
           목록으로
         </Link>
+
+        <LikeButton
+            postId={post.id}
+            initialLiked={post.likedByCurrentUser}
+            initialLikeCount={post.likeCount}
+            isLoggedIn={currentUser !== null}
+            isOwnPost={isAuthor}
+            onLikeChange={handleLikeChange}
+        />
 
         {isAuthor && (
             <Link
