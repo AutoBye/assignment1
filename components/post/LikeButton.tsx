@@ -12,6 +12,13 @@ type LikeButtonProps = {
   onLikeChange?: (likeCount: number, liked: boolean) => void;
 };
 
+type LikeState = {
+  liked: boolean;
+  likeCount: number;
+  message: string;
+  isLoading: boolean;
+};
+
 export default function LikeButton({
   postId,
   initialLiked,
@@ -20,25 +27,34 @@ export default function LikeButton({
   isOwnPost,
   onLikeChange,
 }: LikeButtonProps) {
-  const [liked, setLiked] = useState(initialLiked);
-  const [likeCount, setLikeCount] = useState(initialLikeCount);
-  const [message, setMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [likeState, setLikeState] = useState<LikeState>({
+    liked: initialLiked,
+    likeCount: initialLikeCount,
+    message: "",
+    isLoading: false,
+  });
 
   async function handleClick() {
-    setMessage("");
-
     if (!isLoggedIn) {
-      setMessage("좋아요를 누르려면 로그인이 필요합니다.");
+      setLikeState((currentState) => ({
+        ...currentState,
+        message: "좋아요를 누르려면 로그인이 필요합니다.",
+      }));
       return;
     }
 
     if (isOwnPost) {
-      setMessage("자신이 작성한 글에는 좋아요를 누를 수 없습니다.");
+      setLikeState((currentState) => ({
+        ...currentState,
+        message: "자신이 작성한 글에는 좋아요를 누를 수 없습니다.",
+      }));
       return;
     }
 
-    setIsLoading(true);
+    setLikeState((currentState) => ({
+      ...currentState,
+      isLoading: true,
+    }));
 
     try {
       const response = await fetch(`/api/posts/${postId}/like`, {
@@ -48,7 +64,10 @@ export default function LikeButton({
       const data = (await response.json()) as LikeButtonResponse;
 
       if (!response.ok) {
-        setMessage(data.message ?? "좋아요 처리에 실패했습니다.");
+        setLikeState((currentState) => ({
+          ...currentState,
+          message: "좋아요 처리에 실패했습니다.",
+        }));
         return;
       }
 
@@ -56,43 +75,55 @@ export default function LikeButton({
         typeof data.liked !== "boolean" ||
         typeof data.likeCount !== "number"
       ) {
-        setMessage("좋아요 응답이 올바르지 않습니다.");
+        setLikeState((currentState) => ({
+          ...currentState,
+          message: "좋아요 응답이 올바르지 않습니다.",
+          isLoading: false,
+        }));
         return;
       }
 
-      setLiked(data.liked);
-      setLikeCount(data.likeCount);
+      setLikeState({
+        liked: data.liked,
+        likeCount: data.likeCount,
+        message: "",
+        isLoading: false,
+      });
+
       onLikeChange?.(data.likeCount, data.liked);
     } catch {
-      setMessage("좋아요 요청 중 오류가 발생했습니다.");
+      setLikeState((currentState) => ({
+        ...currentState,
+        message: "좋아요 요청 중 오류가 발생했습니다.",
+        isLoading: false,
+      }));
     } finally {
-      setIsLoading(false);
     }
   }
 
   return (
     <div className="space-y-2">
       <Button
-          type="button"
-          onClick={handleClick}
-          disabled={isLoading}
-          variant="outline"
-          className={
-            liked
-                ? "border-primary/50 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
-                : "hover:border-primary/40 hover:bg-primary/5"
-          }
+        type="button"
+        onClick={handleClick}
+        disabled={likeState.isLoading}
+        variant="outline"
+        className={
+          likeState.liked
+            ? "border-primary/50 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+            : "hover:border-primary/40 hover:bg-primary/5"
+        }
       >
-        {isLoading
+        {likeState.isLoading
           ? "처리 중..."
-          : liked
-            ? `좋아요 취소 ${likeCount}`
-            : `좋아요 ${likeCount}`}
+          : likeState.liked
+            ? `좋아요 취소 ${likeState.likeCount}`
+            : `좋아요 ${likeState.likeCount}`}
       </Button>
 
-      {message && (
+      {likeState.message && (
         <Alert variant="destructive">
-          <AlertDescription>{message}</AlertDescription>
+          <AlertDescription>{likeState.message}</AlertDescription>
         </Alert>
       )}
     </div>
