@@ -28,14 +28,6 @@ type PostDetailClientProps = {
   initialCommentPagination: CommentPaginationResponse;
 };
 
-async function readJson<T>(response: Response) {
-  try {
-    return (await response.json()) as T;
-  } catch {
-    return undefined;
-  }
-}
-
 export default function PostDetailClient({
   postId,
   currentUser,

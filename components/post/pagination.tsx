@@ -1,57 +1,71 @@
 import Link from "next/link";
-import {buttonVariants} from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 type PaginationProps = {
-	currentPage: number;
-	totalPages: number;
+  currentPage: number;
+  totalPages: number;
 };
 
 function createPageHref(page: number) {
-	return `/posts?page=${page}`;
+  return `/posts?page=${page}`;
 }
 
-export default function Pagination ({
-	currentPage,
-	totalPages,
+export default function Pagination({
+  currentPage,
+  totalPages,
 }: PaginationProps) {
-	if (totalPages <= 1) {
-		return null;
-	}
+  if (totalPages <= 1) {
+    return null;
+  }
 
-	const hasPreviousPage = currentPage > 1;
-	const hasNextPage = currentPage < totalPages;
+  const hasPreviousPage = currentPage > 1;
+  const hasNextPage = currentPage < totalPages;
 
-	return (
-		<nav className="mt-6 flex items-center justify-center gap-2">
-			{hasPreviousPage ? (
-				<Link
-					href={createPageHref(currentPage - 1)}
-					className={buttonVariants({ variant: "outline", size: "sm" })}
-				>
-					이전
-				</Link>
-			) : (
-				<span className={buttonVariants({ variant: "outline", size: "sm" })}>
+  return (
+    <nav className="mt-6 flex items-center justify-center gap-2">
+      {hasPreviousPage ? (
+        <Link
+          href={createPageHref(currentPage - 1)}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
+          이전
+        </Link>
+      ) : (
+        <span
+          aria-disabled="true"
+          className={buttonVariants({
+            variant: "outline",
+            size: "sm",
+            className: "cursor-not-allowed opacity-50",
+          })}
+        >
           이전
         </span>
-			)}
+      )}
 
-			<span className="px-3 py-2 text-sm text-muted-foreground">
+      <span className="px-3 py-2 text-sm text-muted-foreground">
         {currentPage} / {totalPages}
       </span>
 
-			{hasNextPage ? (
-				<Link
-					href={createPageHref(currentPage + 1)}
-					className={buttonVariants({ variant: "outline", size: "sm" })}
-				>
-					다음
-				</Link>
-			) : (
-				<span className={buttonVariants({ variant: "outline", size: "sm" })}>
+      {hasNextPage ? (
+        <Link
+          href={createPageHref(currentPage + 1)}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
+          다음
+        </Link>
+      ) : (
+        <span
+          aria-disabled="true"
+          className={buttonVariants({
+            variant: "outline",
+            size: "sm",
+            className: "cursor-not-allowed opacity-50",
+          })}
+        >
           다음
         </span>
-			)}
-		</nav>
-	);
+      )}
+    </nav>
+  );
 }

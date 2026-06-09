@@ -158,7 +158,7 @@ export default function CommentSection({
                                 commentsState.deleteComment(comment.id)
                               }
                               disabled={isDeleting}
-                              className="text-destructive hover:text-destructive"
+                              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                             >
                               {isDeleting ? "삭제 중..." : "삭제"}
                             </Button>
@@ -302,7 +302,7 @@ export default function CommentSection({
                                           commentsState.deleteComment(reply.id)
                                         }
                                         disabled={isReplyDeleting}
-                                        className="text-destructive hover:text-destructive"
+                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                       >
                                         {isReplyDeleting
                                           ? "삭제 중..."

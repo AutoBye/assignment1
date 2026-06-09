@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import {
   COMMENT_CONTENT_MAX_LENGTH,

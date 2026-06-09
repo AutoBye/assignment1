@@ -73,10 +73,15 @@ export default function LikeButton({
   return (
     <div className="space-y-2">
       <Button
-        type="button"
-        onClick={handleClick}
-        disabled={isLoading}
-        variant={liked ? "outline" : "outline"}
+          type="button"
+          onClick={handleClick}
+          disabled={isLoading}
+          variant="outline"
+          className={
+            liked
+                ? "border-primary/50 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+                : "hover:border-primary/40 hover:bg-primary/5"
+          }
       >
         {isLoading
           ? "처리 중..."
