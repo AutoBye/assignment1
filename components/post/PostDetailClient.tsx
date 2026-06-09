@@ -2,16 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import CommentSection from "@/components/comments/CommentSection";
 import LikeButton from "@/components/post/LikeButton";
 import { formatDate } from "@/lib/date";
-import type {
-  PostDetail,
-  PostDetailResponse,
-  DeletePostResponse,
-} from "@/types/post";
+import type { CommentPaginationResponse } from "@/types/api";
 import type { CurrentUser } from "@/types/auth";
+import type { CommentItem } from "@/types/comment";
+import type { DeletePostResponse, PostDetail } from "@/types/post";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -21,73 +19,38 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 
 type PostDetailClientProps = {
   postId: string;
   currentUser: CurrentUser | null;
+  initialPost: PostDetail | null;
+  initialComments: CommentItem[];
+  initialCommentPagination: CommentPaginationResponse;
 };
+
+async function readJson<T>(response: Response) {
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return undefined;
+  }
+}
 
 export default function PostDetailClient({
   postId,
   currentUser,
+  initialPost,
+  initialComments,
+  initialCommentPagination,
 }: PostDetailClientProps) {
   const router = useRouter();
 
-  const [post, setPost] = useState<PostDetail | null>(null);
+  const [post, setPost] = useState<PostDetail | null>(initialPost);
   const [message, setMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // 글 자세히보기 관련 Effect
-  useEffect(() => {
-    const abortController = new AbortController();
-
-    async function fetchPost() {
-      try {
-        setIsLoading(true);
-
-        setMessage("");
-
-        const response = await fetch(`/api/posts/${postId}`, {
-          method: "GET",
-          signal: abortController.signal,
-        });
-
-        const data = (await response.json()) as PostDetailResponse;
-
-        // 응답 체크
-        if (!response.ok) {
-          setMessage(data.message ?? "게시글 조회에 실패했습니다.");
-          return;
-        }
-
-        // 포스트 데이터 없음
-        if (!data.post) {
-          setMessage("게시글 응답이 올바르지 않습니다.");
-          return;
-        }
-
-        setPost(data.post);
-      } catch (error) {
-        if (error instanceof DOMException && error.name == "AbortError") {
-          return;
-        }
-
-        setMessage("게시글 조회 요청 중 오류가 발생했습니다.");
-      } finally {
-        if (!abortController.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void fetchPost();
-
-    return () => {
-      abortController.abort();
-    };
-  }, [postId]);
+  // 글 자세히보기 관련 Effect - 삭제됨
 
   async function handleDeletePost() {
     // 글 존재 체크
@@ -119,9 +82,8 @@ export default function PostDetailClient({
 
       router.replace("/posts");
       router.refresh();
-    } catch (error) {
+    } catch {
       setMessage("게시글 삭제 요청 중 오류가 발생했습니다.");
-      console.log(error);
     } finally {
       setIsDeleting(false);
     }
@@ -152,24 +114,6 @@ export default function PostDetailClient({
         likedByCurrentUser: liked,
       };
     });
-  }
-
-  // 로딩중 JSX
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">게시글 상세</CardTitle>
-          <CardDescription>게시글을 불러오는 중입니다.</CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          <Skeleton className="h-8 w-2/3" />
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-60 w-full" />
-        </CardContent>
-      </Card>
-    );
   }
 
   // 응답x JSX
@@ -203,11 +147,30 @@ export default function PostDetailClient({
   // 게시글 없음 JSX
   if (!post) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground">게시글이 없습니다.</p>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">게시글 조회 실패</CardTitle>
+            <CardDescription>
+              게시글을 찾을 수 없거나 올바르지 않은 게시글 ID입니다.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <div className="flex gap-2">
+              <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.back()}
+              >
+                이전으로
+              </Button>
+
+              <Link href="/posts" className={buttonVariants()}>
+                목록으로
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
     );
   }
 
@@ -216,84 +179,86 @@ export default function PostDetailClient({
 
   // 응답 JSX
   return (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-2xl">{post.title}</CardTitle>
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-2xl">{post.title}</CardTitle>
 
-        <Link
-          href="/"
-          className={buttonVariants({ variant: "ghost", size: "sm" })}
-        >
-          메인으로
-        </Link>
-      </CardHeader>
-
-      <CardContent>
-        {message && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{message}</AlertDescription>
-          </Alert>
-        )}
-
-        <div className="mb-6 border-b pb-4 text-sm text-muted-foreground">
-          <p>작성자: {post.author.name}</p>
-          <p>작성일: {formatDate(post.createdAt)}</p>
-          <p>수정일: {formatDate(post.updatedAt)}</p>
-          <p>
-            좋아요 {post.likeCount}개 · 댓글 {post.commentCount}개 · 북마크{" "}
-            {post.bookmarkCount}개
-          </p>
-        </div>
-
-        <div className="min-h-60 whitespace-pre-wrap text-sm leading-7">
-          {post.content}
-        </div>
-
-        <div className="mt-6 flex flex-wrap gap-2 border-t pt-4">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
-            이전으로
-          </Button>
-
-          <Link href="/posts" className={buttonVariants()}>
-            목록으로
+          <Link
+              href="/"
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
+          >
+            메인으로
           </Link>
+        </CardHeader>
 
-          <LikeButton
-            postId={post.id}
-            initialLiked={post.likedByCurrentUser}
-            initialLikeCount={post.likeCount}
-            isLoggedIn={currentUser !== null}
-            isOwnPost={isAuthor}
-            onLikeChange={handleLikeChange}
-          />
-
-          {isAuthor && (
-            <Link
-              href={`/posts/${post.id}/edit`}
-              className={buttonVariants({ variant: "outline" })}
-            >
-              수정
-            </Link>
+        <CardContent>
+          {message && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{message}</AlertDescription>
+              </Alert>
           )}
 
-          {isAuthor && (
-            <Button
-              type="button"
-              onClick={handleDeletePost}
-              disabled={isDeleting}
-              variant="destructive"
-            >
-              {isDeleting ? "삭제 중..." : "삭제"}
+          <div className="mb-6 border-b pb-4 text-sm text-muted-foreground">
+            <p>작성자: {post.author.name}</p>
+            <p>작성일: {formatDate(post.createdAt)}</p>
+            <p>수정일: {formatDate(post.updatedAt)}</p>
+            <p>
+              좋아요 {post.likeCount}개 · 댓글 {post.commentCount}개 · 북마크{" "}
+              {post.bookmarkCount}개
+            </p>
+          </div>
+
+          <div className="min-h-60 whitespace-pre-wrap text-sm leading-7">
+            {post.content}
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-2 border-t pt-4">
+            <Button type="button" variant="outline" onClick={() => router.back()}>
+              이전으로
             </Button>
-          )}
-        </div>
 
-        <CommentSection
-          postId={post.id}
-          currentUser={currentUser}
-          onCommentCountChange={handleCommentCountChange}
-        />
-      </CardContent>
-    </Card>
+            <Link href="/posts" className={buttonVariants()}>
+              목록으로
+            </Link>
+
+            <LikeButton
+                postId={post.id}
+                initialLiked={post.likedByCurrentUser}
+                initialLikeCount={post.likeCount}
+                isLoggedIn={currentUser !== null}
+                isOwnPost={isAuthor}
+                onLikeChange={handleLikeChange}
+            />
+
+            {isAuthor && (
+                <Link
+                    href={`/posts/${post.id}/edit`}
+                    className={buttonVariants({ variant: "outline" })}
+                >
+                  수정
+                </Link>
+            )}
+
+            {isAuthor && (
+                <Button
+                    type="button"
+                    onClick={handleDeletePost}
+                    disabled={isDeleting}
+                    variant="destructive"
+                >
+                  {isDeleting ? "삭제 중..." : "삭제"}
+                </Button>
+            )}
+          </div>
+
+          <CommentSection
+              postId={postId}
+              currentUser={currentUser}
+              initialComments={initialComments}
+              initialPagination={initialCommentPagination}
+              onCommentCountChange={handleCommentCountChange}
+          />
+        </CardContent>
+      </Card>
   );
 }
