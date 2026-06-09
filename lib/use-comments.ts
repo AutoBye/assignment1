@@ -26,6 +26,32 @@ type UseCommentsParams = {
   onCommentCountChange?: (amount: number) => void;
 };
 
+type CommentFormState = {
+  content: string;
+  editingContent: string;
+  replyContent: string;
+};
+
+type CommentStatusState = {
+  message: string;
+  isLoading: boolean;
+  isSubmitting: boolean;
+};
+
+type CommentPaginationState = {
+  currentPage: number;
+  totalPages: number;
+  totalRootCommentCount: number;
+};
+
+type CommentTargetState = {
+  deletingCommentId: string | null;
+  editingCommentId: string | null;
+  updatingCommentId: string | null;
+  replyingToCommentId: string | null;
+  submittingReplyParentId: string | null;
+};
+
 const DEFAULT_COMMENT_PAGINATION: CommentPaginationResponse = {
   currentPage: 1,
   totalPages: 1,
@@ -67,6 +93,10 @@ function validateCommentContent(content: string, emptyMessage: string) {
   };
 }
 
+// - Hook 호출은 조건문 밖
+// - UI 조건 분기는 JSX 안
+// - 이벤트 함수 안에서 useState, useEffect 호출 금지
+// - map 안에서 Hook 호출 금지
 export function useComments({
   postId,
   initialComments = [],
@@ -74,41 +104,57 @@ export function useComments({
   onCommentCountChange,
 }: UseCommentsParams) {
   const [comments, setComments] = useState<CommentItem[]>(initialComments);
-  const [content, setContent] = useState("");
-  const [message, setMessage] = useState("");
+  const [formState, setFormState] = useState<CommentFormState>({
+    content: "",
+    editingContent: "",
+    replyContent: "",
+  });
+  const [statusState, setStatusState] = useState<CommentStatusState>({
+    message: "",
+    isLoading: false,
+    isSubmitting: false,
+  });
+  const [paginationState, setPaginationState] =
+    useState<CommentPaginationState>({
+      currentPage: initialPagination.currentPage,
+      totalPages: initialPagination.totalPages,
+      totalRootCommentCount: initialPagination.totalRootCommentCount,
+    });
+  const [targetState, setTargetState] = useState<CommentTargetState>({
+    deletingCommentId: null,
+    editingCommentId: null,
+    updatingCommentId: null,
+    replyingToCommentId: null,
+    submittingReplyParentId: null,
+  });
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const setContent = (content: string) => {
+    setFormState((currentState) => ({
+      ...currentState,
+      content,
+    }));
+  };
 
-  const [currentPage, setCurrentPage] = useState(initialPagination.currentPage);
-  const [totalPages, setTotalPages] = useState(initialPagination.totalPages);
-  const [totalRootCommentCount, setTotalRootCommentCount] = useState(
-    initialPagination.totalRootCommentCount,
-  );
+  const setEditingContent = (editingContent: string) => {
+    setFormState((currentState) => ({
+      ...currentState,
+      editingContent,
+    }));
+  };
 
-  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(
-    null,
-  );
-
-  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
-  const [editingContent, setEditingContent] = useState("");
-
-  const [updatingCommentId, setUpdatingCommentId] = useState<string | null>(
-    null,
-  );
-
-  const [replyingToCommentId, setReplyingToCommentId] = useState<string | null>(
-    null,
-  );
-  const [replyContent, setReplyContent] = useState("");
-
-  const [submittingReplyParentId, setSubmittingReplyParentId] = useState<
-    string | null
-  >(null);
+  const setReplyContent = (replyContent: string) => {
+    setFormState((currentState) => ({
+      ...currentState,
+      replyContent,
+    }));
+  };
 
   async function loadComments(page: number) {
-    setIsLoading(true);
-    setMessage("");
+    setStatusState((currentState) => ({
+      ...currentState,
+      isLoading: true,
+      message: "",
+    }));
 
     try {
       const response = await fetch(
@@ -121,35 +167,58 @@ export function useComments({
       const data = await readJson<CommentsResponse>(response);
 
       if (!response.ok) {
-        setMessage(data?.message ?? "댓글 조회에 실패했습니다.");
+        setStatusState((currentState) => ({
+          ...currentState,
+          message: data?.message ?? "댓글 조회에 실패했습니다.",
+        }));
         return;
       }
 
       setComments(data?.comments ?? []);
 
       if (data?.pagination) {
-        setCurrentPage(data.pagination.currentPage);
-        setTotalPages(data.pagination.totalPages);
-        setTotalRootCommentCount(data.pagination.totalRootCommentCount);
+        setPaginationState({
+          currentPage: data.pagination.currentPage,
+          totalPages: data.pagination.totalPages,
+          totalRootCommentCount: data.pagination.totalRootCommentCount,
+        });
       }
     } catch {
-      setMessage("댓글 조회 요청 중 오류가 발생했습니다.");
+      setStatusState((currentState) => ({
+        ...currentState,
+        message: "댓글 조회 요청 중 오류가 발생했습니다.",
+      }));
     } finally {
-      setIsLoading(false);
+      setStatusState((currentState) => ({
+        ...currentState,
+        isLoading: false,
+      }));
     }
   }
 
   async function createComment() {
-    setMessage("");
+    setStatusState((currentState) => ({
+      ...currentState,
+      message: "",
+    }));
 
-    const result = validateCommentContent(content, "댓글 내용을 입력해주세요.");
+    const result = validateCommentContent(
+      formState.content,
+      "댓글 내용을 입력해주세요.",
+    );
 
     if (result.message) {
-      setMessage(result.message);
+      setStatusState((currentState) => ({
+        ...currentState,
+        message: result.message,
+      }));
       return;
     }
 
-    setIsSubmitting(true);
+    setStatusState((currentState) => ({
+      ...currentState,
+      isSubmitting: true,
+    }));
 
     try {
       const response = await fetch(`/api/posts/${postId}/comments`, {
@@ -165,12 +234,18 @@ export function useComments({
       const data = await readJson<CreateCommentResponse>(response);
 
       if (!response.ok) {
-        setMessage(data?.message ?? "댓글 작성에 실패했습니다.");
+        setStatusState((currentState) => ({
+          ...currentState,
+          message: data?.message ?? "댓글 작성에 실패했습니다.",
+        }));
         return;
       }
 
       if (!data?.comment) {
-        setMessage("댓글 작성 응답이 올바르지 않습니다.");
+        setStatusState((currentState) => ({
+          ...currentState,
+          message: "댓글 작성 응답이 올바르지 않습니다.",
+        }));
         return;
       }
 
@@ -179,26 +254,41 @@ export function useComments({
 
       await loadComments(1);
     } catch {
-      setMessage("댓글 작성 요청 중 오류가 발생했습니다.");
+      setStatusState((currentState) => ({
+        ...currentState,
+        message: "댓글 작성 요청 중 오류가 발생했습니다.",
+      }));
     } finally {
-      setIsSubmitting(false);
+      setStatusState((currentState) => ({
+        ...currentState,
+        isSubmitting: false,
+      }));
     }
   }
 
   async function createReply(parentId: string) {
-    setMessage("");
+    setStatusState((currentState) => ({
+      ...currentState,
+      message: "",
+    }));
 
     const result = validateCommentContent(
-      replyContent,
+      formState.replyContent,
       "답글 내용을 입력해주세요.",
     );
 
     if (result.message) {
-      setMessage(result.message);
+      setStatusState((currentState) => ({
+        ...currentState,
+        message: result.message,
+      }));
       return;
     }
 
-    setSubmittingReplyParentId(parentId);
+    setTargetState((currentState) => ({
+      ...currentState,
+      submittingReplyParentId: parentId,
+    }));
 
     try {
       const response = await fetch(`/api/posts/${postId}/comments`, {
@@ -215,72 +305,135 @@ export function useComments({
       const data = await readJson<CreateCommentResponse>(response);
 
       if (!response.ok) {
-        setMessage(data?.message ?? "답글 작성에 실패했습니다.");
+        setStatusState((currentState) => ({
+          ...currentState,
+          message: data?.message ?? "답글 작성에 실패했습니다.",
+        }));
         return;
       }
 
       const createdReply = data?.comment;
 
       if (!createdReply) {
-        setMessage("답글 작성 응답이 올바르지 않습니다.");
+        setStatusState((currentState) => ({
+          ...currentState,
+          message: "답글 작성 응답이 올바르지 않습니다.",
+        }));
         return;
       }
 
       setComments((currentComments) =>
         appendComment(currentComments, createdReply),
       );
-      setReplyContent("");
-      setReplyingToCommentId(null);
+      setFormState((currentState) => ({
+        ...currentState,
+        replyContent: "",
+      }));
+      setTargetState((currentState) => ({
+        ...currentState,
+        replyingToCommentId: null,
+      }));
       onCommentCountChange?.(1);
     } catch {
-      setMessage("답글 작성 요청 중 오류가 발생했습니다.");
+      setStatusState((currentState) => ({
+        ...currentState,
+        message: "답글 작성 요청 중 오류가 발생했습니다.",
+      }));
     } finally {
-      setSubmittingReplyParentId(null);
+      setTargetState((currentState) => ({
+        ...currentState,
+        submittingReplyParentId: null,
+      }));
     }
   }
 
   function startEditComment(comment: CommentItem) {
-    setMessage("");
-    setReplyingToCommentId(null);
-    setReplyContent("");
-    setEditingCommentId(comment.id);
-    setEditingContent(comment.content);
+    setStatusState((currentState) => ({
+      ...currentState,
+      message: "",
+    }));
+    setTargetState((currentState) => ({
+      ...currentState,
+      replyingToCommentId: null,
+      editingCommentId: comment.id,
+    }));
+    setFormState((currentState) => ({
+      ...currentState,
+      replyContent: "",
+      editingContent: comment.content,
+    }));
   }
 
   function cancelEditComment() {
-    setMessage("");
-    setEditingCommentId(null);
-    setEditingContent("");
+    setStatusState((currentState) => ({
+      ...currentState,
+      message: "",
+    }));
+    setTargetState((currentState) => ({
+      ...currentState,
+      editingCommentId: null,
+    }));
+    setFormState((currentState) => ({
+      ...currentState,
+      editingContent: "",
+    }));
   }
 
   function startReply(commentId: string) {
-    setMessage("");
-    setEditingCommentId(null);
-    setEditingContent("");
-    setReplyingToCommentId(commentId);
-    setReplyContent("");
+    setStatusState((currentState) => ({
+      ...currentState,
+      message: "",
+    }));
+    setTargetState((currentState) => ({
+      ...currentState,
+      editingCommentId: null,
+      replyingToCommentId: commentId,
+    }));
+    setFormState((currentState) => ({
+      ...currentState,
+      editingContent: "",
+      replyContent: "",
+    }));
   }
 
   function cancelReply() {
-    setMessage("");
-    setReplyingToCommentId(null);
-    setReplyContent("");
+    setStatusState((currentState) => ({
+      ...currentState,
+      message: "",
+    }));
+    setTargetState((currentState) => ({
+      ...currentState,
+      replyingToCommentId: null,
+    }));
+    setFormState((currentState) => ({
+      ...currentState,
+      replyContent: "",
+    }));
   }
 
   async function updateComment(commentId: string) {
-    setMessage("");
+    setStatusState((currentState) => ({
+      ...currentState,
+      message: "",
+    }));
 
     const result = validateCommentContent(
-      editingContent,
+      formState.editingContent,
       "댓글 내용을 입력해주세요.",
     );
 
     if (result.message) {
-      setMessage(result.message);
+      setStatusState((currentState) => ({
+        ...currentState,
+        message: result.message,
+      }));
       return;
     }
 
-    setUpdatingCommentId(commentId);
+    setTargetState((currentState) => ({
+      ...currentState,
+      updatingCommentId: commentId,
+    }));
 
     try {
       const response = await fetch(`/api/comments/${commentId}`, {
@@ -296,14 +449,20 @@ export function useComments({
       const data = await readJson<UpdateCommentResponse>(response);
 
       if (!response.ok) {
-        setMessage(data?.message ?? "댓글 수정에 실패했습니다.");
+        setStatusState((currentState) => ({
+          ...currentState,
+          message: data?.message ?? "댓글 수정에 실패했습니다.",
+        }));
         return;
       }
 
       const updatedComment = data?.comment;
 
       if (!updatedComment) {
-        setMessage("댓글 수정 응답이 올바르지 않습니다.");
+        setStatusState((currentState) => ({
+          ...currentState,
+          message: "댓글 수정 응답이 올바르지 않습니다.",
+        }));
         return;
       }
 
@@ -311,12 +470,24 @@ export function useComments({
         updateCommentInTree(currentComments, updatedComment),
       );
 
-      setEditingCommentId(null);
-      setEditingContent("");
+      setTargetState((currentState) => ({
+        ...currentState,
+        editingCommentId: null,
+      }));
+      setFormState((currentState) => ({
+        ...currentState,
+        editingContent: "",
+      }));
     } catch {
-      setMessage("댓글 수정 요청 중 오류가 발생했습니다.");
+      setStatusState((currentState) => ({
+        ...currentState,
+        message: "댓글 수정 요청 중 오류가 발생했습니다.",
+      }));
     } finally {
-      setUpdatingCommentId(null);
+      setTargetState((currentState) => ({
+        ...currentState,
+        updatingCommentId: null,
+      }));
     }
   }
 
@@ -327,8 +498,14 @@ export function useComments({
       return;
     }
 
-    setMessage("");
-    setDeletingCommentId(commentId);
+    setStatusState((currentState) => ({
+      ...currentState,
+      message: "",
+    }));
+    setTargetState((currentState) => ({
+      ...currentState,
+      deletingCommentId: commentId,
+    }));
 
     try {
       const deleteCount = findDeleteCount(comments, commentId);
@@ -340,7 +517,10 @@ export function useComments({
       const data = await readJson<DeleteCommentResponse>(response);
 
       if (!response.ok) {
-        setMessage(data?.message ?? "댓글 삭제에 실패했습니다.");
+        setStatusState((currentState) => ({
+          ...currentState,
+          message: data?.message ?? "댓글 삭제에 실패했습니다.",
+        }));
         return;
       }
 
@@ -350,33 +530,39 @@ export function useComments({
 
       onCommentCountChange?.(-deleteCount);
 
-      await loadComments(currentPage);
+      await loadComments(paginationState.currentPage);
     } catch {
-      setMessage("댓글 삭제 요청 중 오류가 발생했습니다.");
+      setStatusState((currentState) => ({
+        ...currentState,
+        message: "댓글 삭제 요청 중 오류가 발생했습니다.",
+      }));
     } finally {
-      setDeletingCommentId(null);
+      setTargetState((currentState) => ({
+        ...currentState,
+        deletingCommentId: null,
+      }));
     }
   }
 
   return {
     comments,
-    content,
+    content: formState.content,
     setContent,
-    message,
-    isLoading,
-    isSubmitting,
-    currentPage,
-    totalPages,
-    totalRootCommentCount,
-    deletingCommentId,
-    editingCommentId,
-    editingContent,
+    message: statusState.message,
+    isLoading: statusState.isLoading,
+    isSubmitting: statusState.isSubmitting,
+    currentPage: paginationState.currentPage,
+    totalPages: paginationState.totalPages,
+    totalRootCommentCount: paginationState.totalRootCommentCount,
+    deletingCommentId: targetState.deletingCommentId,
+    editingCommentId: targetState.editingCommentId,
+    editingContent: formState.editingContent,
     setEditingContent,
-    updatingCommentId,
-    replyingToCommentId,
-    replyContent,
+    updatingCommentId: targetState.updatingCommentId,
+    replyingToCommentId: targetState.replyingToCommentId,
+    replyContent: formState.replyContent,
     setReplyContent,
-    submittingReplyParentId,
+    submittingReplyParentId: targetState.submittingReplyParentId,
     loadComments,
     createComment,
     createReply,

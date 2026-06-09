@@ -57,7 +57,6 @@ export default function PostEditForm({
   // 1. useState 변경으로 인한 렌더링
   // 2. useEffect 실행 시점
   // 3. cleanup 함수 실행 시점
-
   useEffect(() => {
     console.log("PostEditForm effect start", {
       postId,
@@ -109,7 +108,7 @@ export default function PostEditForm({
           return;
         }
 
-        // 자기가 쓴글
+        // 자기가 쓴 글인가
         const post = data.post;
         if (post.author.id !== currentUser.id) {
           setFormState((currentState) => ({
@@ -181,6 +180,7 @@ export default function PostEditForm({
       });
 
       const data = (await response.json()) as UpdatePostResponse;
+
       // 반응 X
       if (!response.ok) {
         setFormState((currentState) => ({
@@ -190,7 +190,7 @@ export default function PostEditForm({
         return;
       }
 
-      // 응답 정상적 X
+      // 응답 정상 X
       if (!data.post) {
         setFormState((currentState) => ({
           ...currentState,
@@ -233,7 +233,7 @@ export default function PostEditForm({
     );
   }
 
-  // 내가 쓴글
+  // 내가 쓴 글이 아님
   if (!formState.isAuthor) {
     return (
       <Card>
