@@ -24,26 +24,57 @@ type PostEditFormProps = {
   currentUser: CurrentUser;
 };
 
+type PostEditFormState = {
+  title: string;
+  content: string;
+  message: string;
+  isLoading: boolean;
+  isSubmitting: boolean;
+  isAuthor: boolean;
+};
+
 export default function PostEditForm({
   postId,
   currentUser,
 }: PostEditFormProps) {
   const router = useRouter();
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [message, setMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAuthor, setIsAuthor] = useState(false);
+  const [formState, setFormState] = useState<PostEditFormState>({
+    title: "",
+    content: "",
+    message: "",
+    isLoading: false,
+    isSubmitting: false,
+    isAuthor: false,
+  });
+
+  // console.log("PostEditForm render", {
+  //   postId,
+  //   currentUserId: currentUser.id,
+  //   ...formState,
+  // });
+
+  // 1. useState 변경으로 인한 렌더링
+  // 2. useEffect 실행 시점
+  // 3. cleanup 함수 실행 시점
 
   useEffect(() => {
+    console.log("PostEditForm effect start", {
+      postId,
+      currentUserId: currentUser.id,
+    });
+
     const abortController = new AbortController();
 
     async function fetchPost() {
       try {
-        setIsLoading(true);
-        setMessage("");
+        console.log("fetchPost start");
+
+        setFormState((currentState) => ({
+          ...currentState,
+          message: "",
+          isLoading: true,
+        }));
 
         const response = await fetch(`/api/posts/${postId}`, {
           method: "GET",
@@ -52,36 +83,69 @@ export default function PostEditForm({
 
         const data = (await response.json()) as PostDetailResponse;
 
-        // 응답 확인
+        // console.log("fetchPost response", {
+        //   ok: response.ok,
+        //   postId: data.post?.id,
+        //   authorId: data.post?.author.id,
+        // });
+
+        // 응답 X
         if (!response.ok) {
-          setMessage(data.message ?? "게시글 조회에 실패했습니다.");
+          setFormState((currentState) => ({
+            ...currentState,
+            message: data.message ?? "게시글 조회에 실패했습니다.",
+            isAuthor: false,
+          }));
           return;
         }
 
-        // 메소드 확인
+        // 포스트 찾기
         if (!data.post) {
-          setMessage("게시글 응답이 올바르지 않습니다.");
+          setFormState((currentState) => ({
+            ...currentState,
+            message: "게시글 응답이 올바르지 않습니다.",
+            isAuthor: false,
+          }));
           return;
         }
 
-        if (data.post.author.id !== currentUser.id) {
-          setMessage("게시글을 수정할 권한이 없습니다.");
-          setIsAuthor(false);
+        // 자기가 쓴글
+        const post = data.post;
+        if (post.author.id !== currentUser.id) {
+          setFormState((currentState) => ({
+            ...currentState,
+            message: "게시글을 수정할 권한이 없습니다.",
+            isAuthor: false,
+          }));
           return;
         }
 
-        setTitle(data.post.title);
-        setContent(data.post.content);
-        setIsAuthor(true);
+        setFormState((currentState) => ({
+          ...currentState,
+          title: post.title,
+          content: post.content,
+          message: "",
+          isAuthor: true,
+        }));
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {
+          console.log("fetchPost aborted");
           return;
         }
 
-        setMessage("게시글 조회 요청 중 오류가 발생했습니다.");
+        setFormState((currentState) => ({
+          ...currentState,
+          message: "게시글 조회 요청 중 오류가 발생했습니다.",
+          isAuthor: false,
+        }));
       } finally {
         if (!abortController.signal.aborted) {
-          setIsLoading(false);
+          console.log("fetchPost finally");
+
+          setFormState((currentState) => ({
+            ...currentState,
+            isLoading: false,
+          }));
         }
       }
     }
@@ -89,16 +153,20 @@ export default function PostEditForm({
     void fetchPost();
 
     return () => {
+      console.log("PostEditForm effect cleanup");
       abortController.abort();
     };
-  }, [postId, currentUser]);
+  }, [postId, currentUser.id]);
 
-  // 수정 제출
+  // 수정 핸들러
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
 
-    setMessage("");
-    setIsSubmitting(true);
+    setFormState((currentState) => ({
+      ...currentState,
+      message: "",
+      isSubmitting: true,
+    }));
 
     try {
       const response = await fetch(`/api/posts/${postId}`, {
@@ -107,36 +175,49 @@ export default function PostEditForm({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          title,
-          content,
+          title: formState.title,
+          content: formState.content,
         }),
       });
 
       const data = (await response.json()) as UpdatePostResponse;
-
-      // 응답 체크
+      // 반응 X
       if (!response.ok) {
-        setMessage(data.message ?? "게시글 수정에 실패했습니다.");
+        setFormState((currentState) => ({
+          ...currentState,
+          message: data.message ?? "게시글 수정에 실패했습니다.",
+        }));
         return;
       }
 
-      // 데이터 체크
+      // 응답 정상적 X
       if (!data.post) {
-        setMessage("게시글 수정 응답이 올바르지 않습니다.");
+        setFormState((currentState) => ({
+          ...currentState,
+          message: "게시글 수정 응답이 올바르지 않습니다.",
+        }));
         return;
       }
 
-      router.replace(`/posts/${data.post.id}`);
+      const updatedPost = data.post;
+
+      router.replace(`/posts/${updatedPost.id}`);
       router.refresh();
     } catch {
-      setMessage("게시글 수정 요청 중 오류가 발생했습니다.");
+      setFormState((currentState) => ({
+        ...currentState,
+        message: "게시글 수정 요청 중 오류가 발생했습니다.",
+      }));
     } finally {
-      setIsSubmitting(false);
+      setFormState((currentState) => ({
+        ...currentState,
+        isSubmitting: false,
+      }));
     }
   };
 
   // 로딩중
-  if (isLoading) {
+  if (formState.isLoading) {
     return (
       <Card>
         <CardHeader>
@@ -144,22 +225,22 @@ export default function PostEditForm({
           <CardDescription>게시글을 불러오는 중입니다.</CardDescription>
         </CardHeader>
 
-        <CardContent className={"space-y-4"}>
-          <Skeleton className={"h-9 w-full"} />
-          <Skeleton className={"h-60 w-full"} />
+        <CardContent className="space-y-4">
+          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-60 w-full" />
         </CardContent>
       </Card>
     );
   }
 
-  // 작성자 아니면
-  if (!isAuthor) {
+  // 내가 쓴글
+  if (!formState.isAuthor) {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">수정 불가</CardTitle>
           <CardDescription>
-            {message || "게시글을 수정할 수 없습니다."}
+            {formState.message || "게시글을 수정할 수 없습니다."}
           </CardDescription>
         </CardHeader>
 
@@ -172,7 +253,7 @@ export default function PostEditForm({
     );
   }
 
-  // 정상경로
+  // 정상 진입
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
@@ -196,9 +277,14 @@ export default function PostEditForm({
             <Input
               id="title"
               type="text"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="게시글 제목을 입력하세요"
+              value={formState.title}
+              onChange={(event) =>
+                setFormState((currentState) => ({
+                  ...currentState,
+                  title: event.target.value,
+                }))
+              }
+              placeholder="게시글 제목을 입력하세요."
             />
 
             <p className="mt-1 text-xs text-muted-foreground">
@@ -213,10 +299,15 @@ export default function PostEditForm({
 
             <Textarea
               id="content"
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
+              value={formState.content}
+              onChange={(event) =>
+                setFormState((currentState) => ({
+                  ...currentState,
+                  content: event.target.value,
+                }))
+              }
               className="min-h-60 resize-y"
-              placeholder="게시글 내용을 입력하세요"
+              placeholder="게시글 내용을 입력하세요."
             />
 
             <p className="mt-1 text-xs text-muted-foreground">
@@ -224,15 +315,15 @@ export default function PostEditForm({
             </p>
           </div>
 
-          {message && (
+          {formState.message && (
             <Alert variant="destructive">
-              <AlertDescription>{message}</AlertDescription>
+              <AlertDescription>{formState.message}</AlertDescription>
             </Alert>
           )}
 
           <div className="flex gap-2">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "수정 중..." : "수정하기"}
+            <Button type="submit" disabled={formState.isSubmitting}>
+              {formState.isSubmitting ? "수정 중..." : "수정하기"}
             </Button>
 
             <Link
