@@ -30,6 +30,7 @@ type CreatePostRequestBody = {
 //GET /api/posts?page=1
 // 페이지네이션 적용
 // 라이브러리 타입 적용
+// _request -> 이 파라미터는 필요해서 받아두지만, 코드 안에서 사용하지는 않음. / 얘는 사용함
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

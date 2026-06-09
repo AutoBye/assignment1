@@ -1,7 +1,7 @@
 //메인 소개 영역
 import Link from "next/link";
 
-export default function HeroSection() {
+export default function BoardIntroSection() {
   return (
     <section className="mb-6 rounded border bg-white p-6">
       <h1 className="mb-2 text-2xl font-bold">게시판 프로젝트</h1>

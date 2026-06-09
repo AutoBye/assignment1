@@ -1,27 +1,18 @@
 import Link from "next/link";
 import Pagination from "@/components/post/pagination";
-
-type PostListItem = {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: string;
-  author: {
-    name: string;
-    email: string;
-  };
-  commentCount: number;
-  likeCount: number;
-  bookmarkCount: number;
-};
+import type { PostListItem } from "@/types/post";
 
 type PostListProps = {
-    posts: PostListItem[];
-    currentPage: number;
-    totalPages: number;
+  posts: PostListItem[];
+  currentPage: number;
+  totalPages: number;
 };
 
-export default function PostList({ posts, currentPage, totalPages }: PostListProps) {
+export default function PostList({
+  posts,
+  currentPage,
+  totalPages,
+}: PostListProps) {
   if (posts.length === 0) {
     return (
       <section className="rounded border bg-white p-6">
@@ -85,7 +76,7 @@ export default function PostList({ posts, currentPage, totalPages }: PostListPro
           </article>
         ))}
       </div>
-        <Pagination currentPage={currentPage} totalPages={totalPages} />
+      <Pagination currentPage={currentPage} totalPages={totalPages} />
     </section>
   );
 }

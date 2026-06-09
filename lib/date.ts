@@ -1,3 +1,8 @@
+/** @description 날짜 포맷 함수 년월일시분
+ *  @param value createdAt
+ *  <br> RecentPostsSection과 PopularPostsSection은 문자열로 받음
+ *  <br> 서버에서 문자열로 미리 바꿈
+ * */
 export function formatDate(value: Date | string) {
 	const date = value instanceof Date ? value : new Date(value);
 
@@ -14,6 +19,11 @@ export function formatDate(value: Date | string) {
 	return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
+/** @description 날짜 포맷 함수 년월일
+ *  @param value createdAt
+ *  <br> RecentPostsSection과 PopularPostsSection은 문자열로 받음
+ *  <br> 서버에서 문자열로 미리 바꿈
+ * */
 export function formatDateOnly(value: Date | string) {
 	const date = value instanceof Date ? value : new Date(value);
 

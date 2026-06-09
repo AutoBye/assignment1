@@ -1,10 +1,5 @@
 import { useState } from "react";
-
-type LikeButtonResponse = {
-  message?: string;
-  liked?: boolean;
-  likeCount?: number;
-};
+import { LikeButtonResponse } from "@/types/post";
 
 type LikeButtonProps = {
   postId: string;
@@ -20,8 +15,8 @@ export default function LikeButton({
   initialLiked,
   initialLikeCount,
   isLoggedIn,
-  onLikeChange,
   isOwnPost,
+  onLikeChange,
 }: LikeButtonProps) {
   const [liked, setLiked] = useState(initialLiked);
   const [likeCount, setLikeCount] = useState(initialLikeCount);

@@ -3,83 +3,25 @@
 
 import { useEffect, useState } from "react";
 import type { SubmitEventHandler } from "react";
-
-type CurrentUser = {
-  id: string;
-  email: string;
-  name: string;
-};
-
-type CommentItem = {
-  id: string;
-  content: string;
-  parentId: string | null;
-  createdAt: string;
-  updatedAt: string;
-  author: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  replies: CommentItem[];
-};
-
-type CommentsResponse = {
-  message?: string;
-  comments?: CommentItem[];
-  pagination?: {
-    currentPage: number;
-    totalPages: number;
-    totalRootCommentCount: number;
-    commentsPerPage: number;
-  };
-};
-
-type CreateCommentResponse = {
-  message?: string;
-  comment?: CommentItem;
-};
-
-type UpdateCommentResponse = {
-  message?: string;
-  comment?: {
-    id: string;
-    content: string;
-    createdAt: string;
-    updatedAt: string;
-    author: {
-      id: string;
-      name: string;
-      email: string;
-    };
-  };
-};
-
-type DeleteCommentResponse = {
-  message?: string;
-};
+import {
+  COMMENT_CONTENT_MAX_LENGTH,
+  COMMENT_CONTENT_MIN_LENGTH,
+} from "@/lib/constants";
+import { formatDate } from "@/lib/date";
+import type { CurrentUser } from "@/types/auth";
+import type {
+  CommentItem,
+  CommentsResponse,
+  CreateCommentResponse,
+  DeleteCommentResponse,
+  UpdateCommentResponse,
+} from "@/types/comment";
 
 type CommentSectionProps = {
   postId: string;
   currentUser: CurrentUser | null;
   onCommentCountChange?: (amount: number) => void;
 };
-
-function formatDate(value: string) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
-}
 
 function appendComment(comments: CommentItem[], newComment: CommentItem) {
   if (newComment.parentId === null) {
@@ -247,8 +189,13 @@ export default function CommentSection({
       return;
     }
 
-    if (trimmedContent.length < 2 || trimmedContent.length > 1000) {
-      setMessage("댓글은 2자 이상 1000자 이하로 입력해주세요.");
+    if (
+        trimmedContent.length < COMMENT_CONTENT_MIN_LENGTH ||
+        trimmedContent.length > COMMENT_CONTENT_MAX_LENGTH
+    ) {
+      setMessage(
+          `댓글은 ${COMMENT_CONTENT_MIN_LENGTH}자 이상 ${COMMENT_CONTENT_MAX_LENGTH}자 이하로 입력해주세요.`,
+      );
       return;
     }
 
@@ -282,7 +229,6 @@ export default function CommentSection({
       setContent("");
       onCommentCountChange?.(1);
 
-      // 일반 댓글은 최신순 첫 페이지에 보이도록 1페이지를 다시 불러온다.
       await fetchComments(1);
     } catch {
       setMessage("댓글 작성 요청 중 오류가 발생했습니다.");

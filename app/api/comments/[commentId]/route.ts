@@ -1,6 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { jsonError, jsonSuccess } from "@/lib/api-response";
+
+import {
+  COMMENT_CONTENT_MAX_LENGTH,
+  COMMENT_CONTENT_MIN_LENGTH,
+} from "@/lib/constants";
+import { getStringValue, isUUID } from "@/lib/validators";
 
 export const runtime = "nodejs";
 
@@ -11,26 +18,8 @@ type CommentRouteContext = {
 };
 
 type UpdateCommentRequestBody = {
-	content?: unknown;
+  content?: unknown;
 };
-
-function isUUID(value: unknown) {
-	if (typeof value !== "string") {
-		return false;
-	}
-
-	return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-		value,
-	);
-}
-
-function getStringValue(value: unknown) {
-	if (typeof value !== "string") {
-		return "";
-	}
-
-	return value.trim();
-}
 
 // DELETE /api/comments/[commentId]
 // -> 로그인 확인
@@ -44,32 +33,18 @@ export async function DELETE(
   try {
     const currentUser = await getCurrentUser();
 
-	//로그인 필요
+    //로그인 필요
     if (!currentUser) {
-      return NextResponse.json(
-        {
-          message: "로그인이 필요합니다.",
-        },
-        {
-          status: 401,
-        },
-      );
+      return jsonError("로그인이 필요합니다.", 401);
     }
 
-	// UUID 체크
+    // UUID 체크
     const { commentId } = await params;
     if (!isUUID(commentId)) {
-      return NextResponse.json(
-        {
-          message: "올바르지 않은 댓글 ID입니다.",
-        },
-        {
-          status: 400,
-        },
-      );
+      return jsonError("올바르지 않은 댓글 ID입니다.", 400);
     }
 
-	// 댓글 여부
+    // 댓글 여부
     const comment = await prisma.comment.findUnique({
       where: {
         id: commentId,
@@ -79,53 +54,32 @@ export async function DELETE(
         authorId: true,
       },
     });
+
     if (!comment) {
-      return NextResponse.json(
-        {
-          message: "댓글을 찾을 수 없습니다.",
-        },
-        {
-          status: 404,
-        },
-      );
+      return jsonError("댓글을 찾을 수 없습니다.", 404);
     }
 
-	// 권한 체크
+    // 권한 체크
     if (comment.authorId !== currentUser.id) {
-      return NextResponse.json(
-        {
-          message: "댓글을 삭제할 권한이 없습니다.",
-        },
-        {
-          status: 403,
-        },
-      );
+      return jsonError("댓글을 삭제할 권한이 없습니다.", 403);
     }
 
-	// 삭제 실행
+    // 삭제 실행
     await prisma.comment.delete({
       where: {
         id: comment.id,
       },
     });
 
-    return NextResponse.json({
+    return jsonSuccess({
       message: "댓글이 삭제되었습니다.",
     });
   } catch (error) {
     console.error(error);
 
-    return NextResponse.json(
-      {
-        message: "댓글 삭제 중 오류가 발생했습니다.",
-      },
-      {
-        status: 500,
-      },
-    );
+    return jsonError("댓글 삭제 중 오류가 발생했습니다.", 500);
   }
 }
-
 
 // PATCH /api/comments/[commentId]
 // -> 로그인 확인
@@ -134,126 +88,93 @@ export async function DELETE(
 // -> 댓글 내용 검사
 // -> 댓글 수정
 export async function PATCH(
-	request: NextRequest,
-	{ params } : CommentRouteContext,
+  request: NextRequest,
+  { params }: CommentRouteContext,
 ) {
-	try {
-		const currentUser = await getCurrentUser();
+  try {
+    const currentUser = await getCurrentUser();
 
-		//로그인 필요
-		if (!currentUser) {
-			return NextResponse.json(
-				{
-					message: "로그인이 필요합니다.",
-				},
-				{
-					status: 401,
-				},
-			);
-		}
+    //로그인 필요
+    if (!currentUser) {
+      return jsonError("로그인이 필요합니다.", 401);
+    }
 
-		// UUID 체크
-		const { commentId } = await params;
-		if (!isUUID(commentId)) {
-			return NextResponse.json(
-				{
-					message: "올바르지 않은 댓글 ID입니다.",
-				},
-				{
-					status: 400,
-				},
-			);
-		}
+    // UUID 체크
+    const { commentId } = await params;
+    if (!isUUID(commentId)) {
+      return jsonError("올바르지 않은 댓글 ID입니다.", 400);
+    }
 
-		// 내용 검증
-		const body = (await request.json()) as UpdateCommentRequestBody;
-		const content = getStringValue(body.content);
-		if (!content) {
-			return NextResponse.json(
-				{
-					message: "댓글 내용을 입력해주세요.",
-				},
-				{
-					status: 400,
-				},
-			);
-		}
-		if (content.length < 2 || content.length > 1000) {
-			return NextResponse.json(
-				{
-					message: "댓글은 2자 이상 1000자 이하로 입력해주세요.",
-				},
-				{
-					status: 400,
-				},
-			);
-		}
+    // 내용 검증
+    const body = (await request.json()) as UpdateCommentRequestBody;
+    const content = getStringValue(body.content);
+    if (!content) {
+      return jsonError("댓글 내용을 입력해주세요.", 400);
+    }
 
-		// 댓글 찾기
-		const comment = await prisma.comment.findUnique({
-			where: {
-				id: commentId,
-			},
-			select: {
-				id: true,
-				authorId: true,
-			},
-		});
+    // 길이
+    if (
+      content.length < COMMENT_CONTENT_MIN_LENGTH ||
+      content.length > COMMENT_CONTENT_MAX_LENGTH
+    ) {
+      return jsonError(
+        `댓글은 ${COMMENT_CONTENT_MIN_LENGTH}자 이상 ${COMMENT_CONTENT_MAX_LENGTH}자 이하로 입력해주세요.`,
+        400,
+      );
+    }
 
-		// 있는 댓글?
-		if (!comment) {
-			return NextResponse.json(
-				{
-					message: "댓글을 찾을 수 없습니다.",
-				},
-				{
-					status: 404,
-				},
-			);
-		}
+    // 댓글 찾기
+    const comment = await prisma.comment.findUnique({
+      where: {
+        id: commentId,
+      },
+      select: {
+        id: true,
+        authorId: true,
+      },
+    });
 
-		// 권한 확인
-		if (comment.authorId !== currentUser.id) {
-			return NextResponse.json(
-				{
-					message: "댓글을 수정할 권한이 없습니다.",
-				},
-				{
-					status: 403,
-				},
-			);
-		}
+    // 있는 댓글?
+    if (!comment) {
+      return jsonError("댓글을 찾을 수 없습니다.", 404);
+    }
 
-		// 수정 실행
-		const updatedComment = await prisma.comment.update({
-			where: {
-				id: comment.id,
-			},
-			data: {
-				content,
-			},
-			select: {
-				id: true,
-				content: true,
-				createdAt: true,
-				updatedAt: true,
-				author: {
-					select: {
-						id: true,
-						name: true,
-						email: true,
-					},
-				},
-			},
-		});
+    // 권한 확인
+    if (comment.authorId !== currentUser.id) {
+      return jsonError("댓글을 수정할 권한이 없습니다.", 403);
+    }
 
-		return NextResponse.json({
-			message: "댓글이 수정되었습니다.",
-			comment: updatedComment,
-		});
-	} catch (error) {
-		console.log(error);
-	} finally {
+    // 수정 실행
+    const updatedComment = await prisma.comment.update({
+      where: {
+        id: comment.id,
+      },
+      data: {
+        content,
+      },
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
 
-	}
+    return jsonSuccess({
+      message: "댓글이 수정되었습니다.",
+      comment: updatedComment,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return jsonError("댓글 수정 중 오류가 발생했습니다.", 500);
+  } finally {
+  }
 }
