@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { LikeButtonResponse } from "@/types/post";
 
 type LikeButtonProps = {
@@ -69,25 +71,25 @@ export default function LikeButton({
   }
 
   return (
-    <div>
-      <button
+    <div className="space-y-2">
+      <Button
         type="button"
         onClick={handleClick}
         disabled={isLoading}
-        className={
-          liked
-            ? "rounded bg-pink-500 px-4 py-2 text-white disabled:bg-gray-400"
-            : "rounded border px-4 py-2 disabled:text-gray-400"
-        }
+        variant={liked ? "outline" : "outline"}
       >
         {isLoading
           ? "처리 중..."
           : liked
             ? `좋아요 취소 ${likeCount}`
             : `좋아요 ${likeCount}`}
-      </button>
+      </Button>
 
-      {message && <p className="mt-2 text-sm text-red-500">{message}</p>}
+      {message && (
+        <Alert variant="destructive">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }

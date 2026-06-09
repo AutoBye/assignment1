@@ -16,6 +16,10 @@ import type {
   DeleteCommentResponse,
   UpdateCommentResponse,
 } from "@/types/comment";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 
 type CommentSectionProps = {
   postId: string;
@@ -190,11 +194,11 @@ export default function CommentSection({
     }
 
     if (
-        trimmedContent.length < COMMENT_CONTENT_MIN_LENGTH ||
-        trimmedContent.length > COMMENT_CONTENT_MAX_LENGTH
+      trimmedContent.length < COMMENT_CONTENT_MIN_LENGTH ||
+      trimmedContent.length > COMMENT_CONTENT_MAX_LENGTH
     ) {
       setMessage(
-          `댓글은 ${COMMENT_CONTENT_MIN_LENGTH}자 이상 ${COMMENT_CONTENT_MAX_LENGTH}자 이하로 입력해주세요.`,
+        `댓글은 ${COMMENT_CONTENT_MIN_LENGTH}자 이상 ${COMMENT_CONTENT_MAX_LENGTH}자 이하로 입력해주세요.`,
       );
       return;
     }
@@ -419,290 +423,332 @@ export default function CommentSection({
   const hasNextPage = currentPage < totalPages;
 
   return (
-    <section className="mt-6 rounded border bg-white p-6">
-      <h2 className="mb-1 text-xl font-bold">댓글</h2>
-
-      <p className="mb-4 text-sm text-gray-500">
-        일반 댓글 {totalRootCommentCount}개
-      </p>
-
-      {currentUser ? (
-        <form onSubmit={handleSubmit} className="mb-6 space-y-3">
-          <div>
-            <label htmlFor="comment" className="mb-1 block text-sm font-medium">
-              댓글 작성
-            </label>
-
-            <textarea
-              id="comment"
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              className="min-h-24 w-full resize-y rounded border px-3 py-2"
-              placeholder="댓글을 입력하세요"
-            />
-
-            <p className="mt-1 text-xs text-gray-500">
-              댓글은 2자 이상 1000자 이하로 입력해주세요.
-            </p>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="rounded bg-blue-500 px-4 py-2 text-white disabled:bg-gray-400"
-          >
-            {isSubmitting ? "작성 중..." : "댓글 작성"}
-          </button>
-        </form>
-      ) : (
-        <p className="mb-6 rounded border bg-gray-50 p-4 text-sm text-gray-600">
-          댓글을 작성하려면 로그인이 필요합니다.
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle>댓글</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          일반 댓글 {totalRootCommentCount}개
         </p>
-      )}
+      </CardHeader>
 
-      {message && <p className="mb-4 text-sm text-red-500">{message}</p>}
+      <CardContent>
+        {currentUser ? (
+          <form onSubmit={handleSubmit} className="mb-6 space-y-3">
+            <div>
+              <label
+                htmlFor="comment"
+                className="mb-1 block text-sm font-medium"
+              >
+                댓글 작성
+              </label>
 
-      {isLoading ? (
-        <p className="text-sm text-gray-500">댓글을 불러오는 중입니다.</p>
-      ) : comments.length === 0 ? (
-        <p className="text-sm text-gray-500">아직 작성된 댓글이 없습니다.</p>
-      ) : (
-        <div className="space-y-4">
-          {comments.map((comment) => {
-            const isAuthor = currentUser?.id === comment.author.id;
-            const isEditing = editingCommentId === comment.id;
-            const isUpdating = updatingCommentId === comment.id;
-            const isDeleting = deletingCommentId === comment.id;
-            const isReplying = replyingToCommentId === comment.id;
+              <Textarea
+                id="comment"
+                value={content}
+                onChange={(event) => setContent(event.target.value)}
+                className="min-h-24 resize-y"
+                placeholder="댓글을 입력하세요"
+              />
 
-            return (
-              <article key={comment.id} className="rounded border p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium text-gray-900">
-                      {comment.author.name}
-                    </span>
-                    <span> · {formatDate(comment.createdAt)}</span>
-                  </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                댓글은 2자 이상 1000자 이하로 입력해주세요.
+              </p>
+            </div>
 
-                  <div className="flex gap-2">
-                    {currentUser && !isEditing && (
-                      <button
-                        type="button"
-                        onClick={() => startReply(comment.id)}
-                        className="text-sm text-blue-500"
-                      >
-                        답글
-                      </button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "작성 중..." : "댓글 작성"}
+            </Button>
+          </form>
+        ) : (
+          <div className="mb-6 rounded-md border bg-muted p-4 text-sm text-muted-foreground">
+            댓글을 작성하려면 로그인이 필요합니다.
+          </div>
+        )}
+
+        {message && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{message}</AlertDescription>
+          </Alert>
+        )}
+
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">
+            댓글을 불러오는 중입니다.
+          </p>
+        ) : comments.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            아직 작성된 댓글이 없습니다.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {comments.map((comment) => {
+              const isAuthor = currentUser?.id === comment.author.id;
+              const isEditing = editingCommentId === comment.id;
+              const isUpdating = updatingCommentId === comment.id;
+              const isDeleting = deletingCommentId === comment.id;
+              const isReplying = replyingToCommentId === comment.id;
+
+              return (
+                <Card key={comment.id}>
+                  <CardContent className="p-4">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <div className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">
+                          {comment.author.name}
+                        </span>
+                        <span> · {formatDate(comment.createdAt)}</span>
+                      </div>
+
+                      <div className="flex gap-2">
+                        {currentUser && !isEditing && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => startReply(comment.id)}
+                          >
+                            답글
+                          </Button>
+                        )}
+
+                        {isAuthor && !isEditing && (
+                          <>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => startEditComment(comment)}
+                            >
+                              수정
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteComment(comment.id)}
+                              disabled={isDeleting}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              {isDeleting ? "삭제 중..." : "삭제"}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <Textarea
+                          value={editingContent}
+                          onChange={(event) =>
+                            setEditingContent(event.target.value)
+                          }
+                          className="min-h-24 resize-y text-sm"
+                        />
+
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => handleUpdateComment(comment.id)}
+                            disabled={isUpdating}
+                          >
+                            {isUpdating ? "수정 중..." : "저장"}
+                          </Button>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={cancelEditComment}
+                            disabled={isUpdating}
+                          >
+                            취소
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="whitespace-pre-wrap text-sm text-foreground">
+                        {comment.content}
+                      </p>
                     )}
 
-                    {isAuthor && !isEditing && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => startEditComment(comment)}
-                          className="text-sm text-blue-500"
-                        >
-                          수정
-                        </button>
+                    {isReplying && (
+                      <div className="mt-4 rounded-md border bg-muted p-3">
+                        <label className="mb-1 block text-sm font-medium">
+                          답글 작성
+                        </label>
 
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteComment(comment.id)}
-                          disabled={isDeleting}
-                          className="text-sm text-red-500 disabled:text-gray-400"
-                        >
-                          {isDeleting ? "삭제 중..." : "삭제"}
-                        </button>
-                      </>
+                        <Textarea
+                          value={replyContent}
+                          onChange={(event) =>
+                            setReplyContent(event.target.value)
+                          }
+                          className="min-h-20 resize-y bg-background text-sm"
+                          placeholder="답글을 입력하세요"
+                        />
+
+                        <div className="mt-2 flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => handleCreateReply(comment.id)}
+                            disabled={submittingReplyParentId === comment.id}
+                          >
+                            {submittingReplyParentId === comment.id
+                              ? "작성 중..."
+                              : "답글 작성"}
+                          </Button>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={cancelReply}
+                            disabled={submittingReplyParentId === comment.id}
+                          >
+                            취소
+                          </Button>
+                        </div>
+                      </div>
                     )}
-                  </div>
-                </div>
 
-                {isEditing ? (
-                  <div className="space-y-2">
-                    <textarea
-                      value={editingContent}
-                      onChange={(event) =>
-                        setEditingContent(event.target.value)
-                      }
-                      className="min-h-24 w-full resize-y rounded border px-3 py-2 text-sm"
-                    />
+                    {comment.replies.length > 0 && (
+                      <div className="mt-4 space-y-3 border-l pl-4">
+                        {comment.replies.map((reply) => {
+                          const isReplyAuthor =
+                            currentUser?.id === reply.author.id;
+                          const isReplyEditing = editingCommentId === reply.id;
+                          const isReplyUpdating =
+                            updatingCommentId === reply.id;
+                          const isReplyDeleting =
+                            deletingCommentId === reply.id;
 
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateComment(comment.id)}
-                        disabled={isUpdating}
-                        className="rounded bg-blue-500 px-3 py-1 text-sm text-white disabled:bg-gray-400"
-                      >
-                        {isUpdating ? "수정 중..." : "저장"}
-                      </button>
+                          return (
+                            <Card key={reply.id}>
+                              <CardContent className="p-3">
+                                <div className="mb-2 flex items-center justify-between gap-3">
+                                  <div className="text-sm text-muted-foreground">
+                                    <span className="font-medium text-foreground">
+                                      {reply.author.name}
+                                    </span>
+                                    <span>
+                                      {" "}
+                                      · {formatDate(reply.createdAt)}
+                                    </span>
+                                  </div>
 
-                      <button
-                        type="button"
-                        onClick={cancelEditComment}
-                        disabled={isUpdating}
-                        className="rounded border px-3 py-1 text-sm disabled:text-gray-400"
-                      >
-                        취소
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="whitespace-pre-wrap text-sm text-gray-800">
-                    {comment.content}
-                  </p>
-                )}
+                                  {isReplyAuthor && !isReplyEditing && (
+                                    <div className="flex gap-2">
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => startEditComment(reply)}
+                                      >
+                                        수정
+                                      </Button>
 
-                {isReplying && (
-                  <div className="mt-4 rounded border bg-gray-50 p-3">
-                    <label className="mb-1 block text-sm font-medium">
-                      답글 작성
-                    </label>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleDeleteComment(reply.id)
+                                        }
+                                        disabled={isReplyDeleting}
+                                        className="text-destructive hover:text-destructive"
+                                      >
+                                        {isReplyDeleting
+                                          ? "삭제 중..."
+                                          : "삭제"}
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
 
-                    <textarea
-                      value={replyContent}
-                      onChange={(event) => setReplyContent(event.target.value)}
-                      className="min-h-20 w-full resize-y rounded border bg-white px-3 py-2 text-sm"
-                      placeholder="답글을 입력하세요"
-                    />
+                                {isReplyEditing ? (
+                                  <div className="space-y-2">
+                                    <Textarea
+                                      value={editingContent}
+                                      onChange={(event) =>
+                                        setEditingContent(event.target.value)
+                                      }
+                                      className="min-h-20 resize-y text-sm"
+                                    />
 
-                    <div className="mt-2 flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleCreateReply(comment.id)}
-                        disabled={submittingReplyParentId === comment.id}
-                        className="rounded bg-blue-500 px-3 py-1 text-sm text-white disabled:bg-gray-400"
-                      >
-                        {submittingReplyParentId === comment.id
-                          ? "작성 중..."
-                          : "답글 작성"}
-                      </button>
+                                    <div className="flex gap-2">
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleUpdateComment(reply.id)
+                                        }
+                                        disabled={isReplyUpdating}
+                                      >
+                                        {isReplyUpdating
+                                          ? "수정 중..."
+                                          : "저장"}
+                                      </Button>
 
-                      <button
-                        type="button"
-                        onClick={cancelReply}
-                        disabled={submittingReplyParentId === comment.id}
-                        className="rounded border bg-white px-3 py-1 text-sm disabled:text-gray-400"
-                      >
-                        취소
-                      </button>
-                    </div>
-                  </div>
-                )}
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={cancelEditComment}
+                                        disabled={isReplyUpdating}
+                                      >
+                                        취소
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="whitespace-pre-wrap text-sm text-foreground">
+                                    {reply.content}
+                                  </p>
+                                )}
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
 
-                {comment.replies.length > 0 && (
-                  <div className="mt-4 space-y-3 border-l pl-4">
-                    {comment.replies.map((reply) => {
-                      const isReplyAuthor = currentUser?.id === reply.author.id;
-                      const isReplyEditing = editingCommentId === reply.id;
-                      const isReplyUpdating = updatingCommentId === reply.id;
-                      const isReplyDeleting = deletingCommentId === reply.id;
+        {totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fetchComments(currentPage - 1)}
+              disabled={!hasPreviousPage || isLoading}
+            >
+              이전
+            </Button>
 
-                      return (
-                        <article key={reply.id} className="rounded border p-3">
-                          <div className="mb-2 flex items-center justify-between">
-                            <div className="text-sm text-gray-600">
-                              <span className="font-medium text-gray-900">
-                                {reply.author.name}
-                              </span>
-                              <span> · {formatDate(reply.createdAt)}</span>
-                            </div>
+            <span className="px-3 py-2 text-sm text-muted-foreground">
+              {currentPage} / {totalPages}
+            </span>
 
-                            {isReplyAuthor && !isReplyEditing && (
-                              <div className="flex gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => startEditComment(reply)}
-                                  className="text-sm text-blue-500"
-                                >
-                                  수정
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteComment(reply.id)}
-                                  disabled={isReplyDeleting}
-                                  className="text-sm text-red-500 disabled:text-gray-400"
-                                >
-                                  {isReplyDeleting ? "삭제 중..." : "삭제"}
-                                </button>
-                              </div>
-                            )}
-                          </div>
-
-                          {isReplyEditing ? (
-                            <div className="space-y-2">
-                              <textarea
-                                value={editingContent}
-                                onChange={(event) =>
-                                  setEditingContent(event.target.value)
-                                }
-                                className="min-h-20 w-full resize-y rounded border px-3 py-2 text-sm"
-                              />
-
-                              <div className="flex gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => handleUpdateComment(reply.id)}
-                                  disabled={isReplyUpdating}
-                                  className="rounded bg-blue-500 px-3 py-1 text-sm text-white disabled:bg-gray-400"
-                                >
-                                  {isReplyUpdating ? "수정 중..." : "저장"}
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={cancelEditComment}
-                                  disabled={isReplyUpdating}
-                                  className="rounded border px-3 py-1 text-sm disabled:text-gray-400"
-                                >
-                                  취소
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <p className="whitespace-pre-wrap text-sm text-gray-800">
-                              {reply.content}
-                            </p>
-                          )}
-                        </article>
-                      );
-                    })}
-                  </div>
-                )}
-              </article>
-            );
-          })}
-        </div>
-      )}
-
-      {totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-center gap-2">
-          <button
-            type="button"
-            onClick={() => fetchComments(currentPage - 1)}
-            disabled={!hasPreviousPage || isLoading}
-            className="rounded border px-3 py-2 text-sm disabled:text-gray-400"
-          >
-            이전
-          </button>
-
-          <span className="px-3 py-2 text-sm">
-            {currentPage} / {totalPages}
-          </span>
-
-          <button
-            type="button"
-            onClick={() => fetchComments(currentPage + 1)}
-            disabled={!hasNextPage || isLoading}
-            className="rounded border px-3 py-2 text-sm disabled:text-gray-400"
-          >
-            다음
-          </button>
-        </div>
-      )}
-    </section>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fetchComments(currentPage + 1)}
+              disabled={!hasNextPage || isLoading}
+            >
+              다음
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -4,40 +4,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { SubmitEventHandler } from "react";
-
-type CurrentUser = {
-  id: string;
-  email: string;
-  name: string;
-};
-
-type PostDetail = {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: string;
-  updateAt: string;
-  author: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  commentCount: number;
-  likeCount: number;
-  bookmarkCount: number;
-};
-
-type PostDetailResponse = {
-  message?: string;
-  post?: PostDetail;
-};
-
-type UpdatePostResponse = {
-  message?: string;
-  post?: {
-    id: string;
-  };
-};
+import type { CurrentUser } from "@/types/auth";
+import type { PostDetailResponse, UpdatePostResponse } from "@/types/post";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 
 type PostEditFormProps = {
   postId: string;
@@ -81,9 +61,8 @@ export default function PostEditForm({
         // 메소드 확인
         if (!data.post) {
           setMessage("게시글 응답이 올바르지 않습니다.");
-		  return
+          return;
         }
-
 
         if (data.post.author.id !== currentUser.id) {
           setMessage("게시글을 수정할 권한이 없습니다.");
@@ -135,13 +114,13 @@ export default function PostEditForm({
 
       const data = (await response.json()) as UpdatePostResponse;
 
-	  // 응답 체크
+      // 응답 체크
       if (!response.ok) {
         setMessage(data.message ?? "게시글 수정에 실패했습니다.");
         return;
       }
 
-	  // 데이터 체크
+      // 데이터 체크
       if (!data.post) {
         setMessage("게시글 수정 응답이 올바르지 않습니다.");
         return;
@@ -159,100 +138,112 @@ export default function PostEditForm({
   // 로딩중
   if (isLoading) {
     return (
-      <section className="rounded border bg-white p-6">
-        <p className="text-sm text-gray-500">게시글을 불러오는 중입니다.</p>
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl">게시글 수정</CardTitle>
+          <CardDescription>게시글을 불러오는 중입니다.</CardDescription>
+        </CardHeader>
+
+        <CardContent className={"space-y-4"}>
+          <Skeleton className={"h-9 w-full"} />
+          <Skeleton className={"h-60 w-full"} />
+        </CardContent>
+      </Card>
     );
   }
 
   // 작성자 아니면
   if (!isAuthor) {
     return (
-      <section className="rounded border bg-white p-6">
-        <h1 className="mb-2 text-2xl font-bold">수정 불가</h1>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl">수정 불가</CardTitle>
+          <CardDescription>
+            {message || "게시글을 수정할 수 없습니다."}
+          </CardDescription>
+        </CardHeader>
 
-        <p className="mb-4 text-sm text-red-500">
-          {message || "게시글을 수정할 수 없습니다."}
-        </p>
-
-        <Link
-          href="/posts"
-          className="rounded bg-blue-500 px-4 py-2 text-white"
-        >
-          목록으로
-        </Link>
-      </section>
+        <CardContent>
+          <Link href="/posts" className={buttonVariants()}>
+            목록으로
+          </Link>
+        </CardContent>
+      </Card>
     );
   }
 
   // 정상경로
   return (
-    <section className="rounded border bg-white p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">게시글 수정</h1>
+    <Card>
+      <CardHeader className="flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-2xl">게시글 수정</CardTitle>
 
         <Link
           href={`/posts/${postId}`}
-          className="text-sm text-gray-500 hover:text-blue-500"
+          className={buttonVariants({ variant: "ghost", size: "sm" })}
         >
           상세보기로
         </Link>
-      </div>
+      </CardHeader>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="title" className="mb-1 block text-sm font-medium">
-            제목
-          </label>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="title" className="mb-1 block text-sm font-medium">
+              제목
+            </label>
 
-          <input
-            id="title"
-            type="text"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            className="w-full rounded border px-3 py-2"
-            placeholder="게시글 제목을 입력하세요"
-          />
+            <Input
+              id="title"
+              type="text"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="게시글 제목을 입력하세요"
+            />
 
-          <p className="mt-1 text-xs text-gray-500">
-            제목은 2자 이상 200자 이하로 입력해주세요.
-          </p>
-        </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              제목은 2자 이상 200자 이하로 입력해주세요.
+            </p>
+          </div>
 
-        <div>
-          <label htmlFor="content" className="mb-1 block text-sm font-medium">
-            내용
-          </label>
+          <div>
+            <label htmlFor="content" className="mb-1 block text-sm font-medium">
+              내용
+            </label>
 
-          <textarea
-            id="content"
-            value={content}
-            onChange={(event) => setContent(event.target.value)}
-            className="min-h-60 w-full resize-y rounded border px-3 py-2"
-            placeholder="게시글 내용을 입력하세요"
-          />
+            <Textarea
+              id="content"
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
+              className="min-h-60 resize-y"
+              placeholder="게시글 내용을 입력하세요"
+            />
 
-          <p className="mt-1 text-xs text-gray-500">
-            내용은 2자 이상 입력해주세요.
-          </p>
-        </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              내용은 2자 이상 입력해주세요.
+            </p>
+          </div>
 
-        {message && <p className="text-sm text-red-500">{message}</p>}
+          {message && (
+            <Alert variant="destructive">
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
+          )}
 
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="rounded bg-blue-500 px-4 py-2 text-white disabled:bg-gray-400"
-          >
-            {isSubmitting ? "수정 중..." : "수정하기"}
-          </button>
+          <div className="flex gap-2">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "수정 중..." : "수정하기"}
+            </Button>
 
-          <Link href={`/posts/${postId}`} className="rounded border px-4 py-2">
-            취소
-          </Link>
-        </div>
-      </form>
-    </section>
+            <Link
+              href={`/posts/${postId}`}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              취소
+            </Link>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

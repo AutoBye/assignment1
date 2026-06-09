@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {buttonVariants} from "@/components/ui/button";
 
 type PaginationProps = {
 	currentPage: number;
@@ -25,31 +26,31 @@ export default function Pagination ({
 			{hasPreviousPage ? (
 				<Link
 					href={createPageHref(currentPage - 1)}
-					className="rounded border px-3 py-2 text-sm"
+					className={buttonVariants({ variant: "outline", size: "sm" })}
 				>
 					이전
 				</Link>
 			) : (
-				<span className="rounded border px-3 py-2 text-sm text-gray-400">
-					이전
-				</span>
+				<span className={buttonVariants({ variant: "outline", size: "sm" })}>
+          이전
+        </span>
 			)}
 
-			<span className="px-3 py-2 text-sm">
-				{currentPage} / {totalPages}
-			</span>
+			<span className="px-3 py-2 text-sm text-muted-foreground">
+        {currentPage} / {totalPages}
+      </span>
 
 			{hasNextPage ? (
 				<Link
 					href={createPageHref(currentPage + 1)}
-					className="rounded border px-3 py-2 text-sm"
+					className={buttonVariants({ variant: "outline", size: "sm" })}
 				>
 					다음
 				</Link>
 			) : (
-				<span className="rounded border px-3 py-2 text-sm text-gray-400">
-					다음
-				</span>
+				<span className={buttonVariants({ variant: "outline", size: "sm" })}>
+          다음
+        </span>
 			)}
 		</nav>
 	);

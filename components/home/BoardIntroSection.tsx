@@ -1,27 +1,38 @@
 //메인 소개 영역
 import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 
 export default function BoardIntroSection() {
-  return (
-    <section className="mb-6 rounded border bg-white p-6">
-      <h1 className="mb-2 text-2xl font-bold">게시판 프로젝트</h1>
+    return (
+        <Card className="mb-6">
+            <CardHeader>
+                <CardTitle className="text-2xl">게시판 프로젝트</CardTitle>
+                <CardDescription>
+                    게시글, 댓글, 좋아요, 북마크 기능을 연습하는 과제용 웹 페이지입니다.
+                </CardDescription>
+            </CardHeader>
 
-      <p className="mb-4 text-gray-600">
-        게시글, 댓글, 좋아요, 북마크 기능을 연습하는 과제용 웹 페이지입니다.
-      </p>
+            <CardContent>
+                <div className="flex gap-2">
+                    <Link href="/posts" className={buttonVariants()}>
+                        게시글 보기
+                    </Link>
 
-      <div className="flex gap-2">
-        <Link
-          href="/posts"
-          className="rounded bg-blue-500 px-4 py-2 text-white"
-        >
-          게시글 보기
-        </Link>
-
-        <Link href="/posts/new" className="rounded border px-4 py-2">
-          글쓰기
-        </Link>
-      </div>
-    </section>
-  );
+                    <Link
+                        href="/posts/new"
+                        className={buttonVariants({ variant: "outline" })}
+                    >
+                        글쓰기
+                    </Link>
+                </div>
+            </CardContent>
+        </Card>
+    );
 }

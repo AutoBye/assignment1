@@ -4,6 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { SubmitEventHandler } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 type CreatePostResponse = {
   message?: string;
@@ -62,69 +67,73 @@ export default function PostWriteForm() {
   };
 
   return (
-    <section className="rounded border bg-white p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">글쓰기</h1>
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-2xl">글쓰기</CardTitle>
 
-        <Link href="/" className="text-sm text-gray-500 hover:text-blue-500">
-          메인으로
-        </Link>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="title" className="mb-1 block text-sm font-medium">
-            제목
-          </label>
-
-          <input
-            id="title"
-            type="text"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            className="w-full rounded border px-3 py-2"
-            placeholder="게시글 제목을 입력하세요"
-          />
-
-          <p className="mt-1 text-xs text-gray-500">
-            제목은 2자 이상 200자 이하로 입력해주세요.
-          </p>
-        </div>
-
-        <div>
-          <label htmlFor="content" className="mb-1 block text-sm font-medium">
-            내용
-          </label>
-
-          <textarea
-            id="content"
-            value={content}
-            onChange={(event) => setContent(event.target.value)}
-            className="min-h-60 w-full resize-y rounded border px-3 py-2"
-            placeholder="게시글 내용을 입력하세요"
-          />
-
-          <p className="mt-1 text-xs text-gray-500">
-            내용은 2자 이상 입력해주세요.
-          </p>
-        </div>
-
-        {message && <p className="text-sm text-red-500">{message}</p>}
-
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="rounded bg-blue-500 px-4 py-2 text-white disabled:bg-gray-400"
+          <Link
+              href="/"
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
           >
-            {isLoading ? "작성 중..." : "작성하기"}
-          </button>
-
-          <Link href="/" className="rounded border px-4 py-2">
-            취소
+            메인으로
           </Link>
-        </div>
-      </form>
-    </section>
+        </CardHeader>
+
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="title" className="mb-1 block text-sm font-medium">
+                제목
+              </label>
+
+              <Input
+                  id="title"
+                  type="text"
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="게시글 제목을 입력하세요"
+              />
+
+              <p className="mt-1 text-xs text-muted-foreground">
+                제목은 2자 이상 200자 이하로 입력해주세요.
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="content" className="mb-1 block text-sm font-medium">
+                내용
+              </label>
+
+              <Textarea
+                  id="content"
+                  value={content}
+                  onChange={(event) => setContent(event.target.value)}
+                  className="min-h-60 resize-y"
+                  placeholder="게시글 내용을 입력하세요"
+              />
+
+              <p className="mt-1 text-xs text-muted-foreground">
+                내용은 2자 이상 입력해주세요.
+              </p>
+            </div>
+
+            {message && (
+                <Alert variant="destructive">
+                  <AlertDescription>{message}</AlertDescription>
+                </Alert>
+            )}
+
+            <div className="flex gap-2">
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "작성 중..." : "작성하기"}
+              </Button>
+
+              <Link href="/" className={buttonVariants({ variant: "outline" })}>
+                취소
+              </Link>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
   );
 }

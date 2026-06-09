@@ -1,9 +1,12 @@
+// 얘도 서버 라이브러리다...
+import "server-only"
+
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 //쿠키 이름
-export const SESSION_COOKIE_NAME = "assignment1_sesssion";
+export const SESSION_COOKIE_NAME = "assignment1_session";
 // 7일
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 

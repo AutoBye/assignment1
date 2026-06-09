@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type RecentPost = {
   id: string;
@@ -13,31 +15,40 @@ type RecentPostsSectionProps = {
 
 export default function RecentPostsSection({ posts }: RecentPostsSectionProps) {
   return (
-    <section className="mb-6 rounded border bg-white p-6">
-      <h2 className="mb-4 text-xl font-bold">최근 게시글</h2>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-xl">최근 게시글</CardTitle>
+        </CardHeader>
 
-      {posts.length === 0 ? (
-        <p className="text-sm text-gray-500">아직 작성된 게시글이 없습니다.</p>
-      ) : (
-        <div className="space-y-3">
-          {posts.map((post) => (
-            <article key={post.id} className="rounded border bg-white p-4">
-              <h3 className="font-bold">{post.title}</h3>
-
-              <p className="mt-1 text-sm text-gray-600">
-                {post.author} · {post.createdAt}
+        <CardContent>
+          {posts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                아직 작성된 게시글이 없습니다.
               </p>
+          ) : (
+              <div className="space-y-3">
+                {posts.map((post) => (
+                    <article key={post.id} className="rounded-lg border p-4">
+                      <h3 className="font-semibold">{post.title}</h3>
 
-              <Link
-                href={`/posts/${post.id}`}
-                className="mt-2 inline-block text-sm text-blue-500"
-              >
-                상세보기
-              </Link>
-            </article>
-          ))}
-        </div>
-      )}
-    </section>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {post.author} · {post.createdAt}
+                      </p>
+
+                      <Link
+                          href={`/posts/${post.id}`}
+                          className={buttonVariants({
+                            variant: "link",
+                            size: "sm",
+                          })}
+                      >
+                        상세보기
+                      </Link>
+                    </article>
+                ))}
+              </div>
+          )}
+        </CardContent>
+      </Card>
   );
 }
