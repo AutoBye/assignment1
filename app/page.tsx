@@ -9,6 +9,7 @@ import { getPopularPosts, getRecentPosts } from "@/lib/posts";
 // 서버 컴포넌트임
 export default async function Home() {
   // 서버 컴포넌트라서 서버에서 쿠키를 읽고 DB 조회 가능
+
   // 06-09 post 관련 너무 길어서 그냥 lib 쪽에 빼버림
   // 언젠간 다른곳에서 재활용 하겠지
   const currentUser = await getCurrentUser();
