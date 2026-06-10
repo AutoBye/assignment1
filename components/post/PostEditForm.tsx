@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
+import { useToastStore } from "@/lib/stores/toast-store";
 
 type PostEditFormProps = {
   postId: string;
@@ -49,7 +50,7 @@ export default function PostEditForm({ postId }: PostEditFormProps) {
   });
 
   const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
-
+  const showToast = useToastStore((state) => state.showToast);
   // console.log("PostEditForm render", {
   //   postId,
   //   currentUserId: currentUser.id,
@@ -190,6 +191,11 @@ export default function PostEditForm({ postId }: PostEditFormProps) {
       }
 
       const updatedPost = data.post;
+
+      showToast({
+        type: "success",
+        message: "게시글이 수정되었습니다.",
+      });
 
       router.replace(`/posts/${updatedPost.id}`);
       router.refresh();

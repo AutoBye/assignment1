@@ -19,7 +19,8 @@ import type {
   UpdateCommentResponse,
 } from "@/types/comment";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
-import {useConfirmModalStore} from "@/lib/stores/confirm-modal-store";
+import { useConfirmModalStore } from "@/lib/stores/confirm-modal-store";
+import { useToastStore } from "@/lib/stores/toast-store";
 
 type UseCommentsParams = {
   postId: string;
@@ -130,12 +131,11 @@ export function useComments({
     submittingReplyParentId: null,
   });
   //얘도 훅이다? 조건문 안이 아닌 state들과 같이 호출해
-  const openErrorModal = useErrorModalStore(
-      (state) => state.openErrorModal,
-  );
+  const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
   const openConfirmModal = useConfirmModalStore(
-      (state) => state.openConfirmModal,
+    (state) => state.openConfirmModal,
   );
+  const showToast = useToastStore((state) => state.showToast);
 
   const setContent = (content: string) => {
     setFormState((currentState) => ({
@@ -249,6 +249,11 @@ export function useComments({
       setContent("");
       onCommentCountChange?.(1);
 
+      showToast({
+        type: "success",
+        message: "댓글이 작성되었습니다.",
+      });
+
       await loadComments(1);
     } catch {
       openErrorModal("댓글 작성 요청 중 오류가 발생했습니다.");
@@ -321,6 +326,12 @@ export function useComments({
         ...currentState,
         replyingToCommentId: null,
       }));
+
+      showToast({
+        type: "success",
+        message: "답글이 작성되었습니다.",
+      });
+
       onCommentCountChange?.(1);
     } catch {
       openErrorModal("답글 작성 요청 중 오류가 발생했습니다.");
@@ -457,6 +468,11 @@ export function useComments({
         ...currentState,
         editingContent: "",
       }));
+
+      showToast({
+        type: "success",
+        message: "댓글이 수정되었습니다.",
+      });
     } catch {
       openErrorModal("댓글 수정 요청 중 오류가 발생했습니다.");
     } finally {
@@ -507,6 +523,11 @@ export function useComments({
       );
 
       onCommentCountChange?.(-deleteCount);
+
+      showToast({
+        type: "success",
+        message: "댓글이 삭제되었습니다.",
+      });
 
       await loadComments(paginationState.currentPage);
     } catch {

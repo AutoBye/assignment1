@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import ErrorModal from "@/components/common/ErrorModal";
 import ConfirmModal from "@/components/common/ConfirmModal";
+import ToastViewport from "@/components/common/ToastViewport";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -43,6 +44,7 @@ export default function RootLayout({
         {children}
         <ErrorModal />
         <ConfirmModal />
+        <ToastViewport />
       </body>
     </html>
   );

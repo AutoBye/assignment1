@@ -19,7 +19,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatDate } from "@/lib/date";
 import LikeButton from "@/components/post/LikeButton";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
-import {useConfirmModalStore} from "@/lib/stores/confirm-modal-store";
+import { useConfirmModalStore } from "@/lib/stores/confirm-modal-store";
+import { useToastStore } from "@/lib/stores/toast-store";
+import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 // 5번 과제는 components/post/PostDetailClient.tsx에서 부모 state가 자식 콜백으로 바뀌는 흐름
 // > 자식 컴포넌트가 직접 부모 state를 바꾸는 게 아니라, 부모가 넘겨준 함수를 호출해서 부모 state를 바꾼다.
 // React 에서는 데이터 흐름을 보통 위에서 아래로 둠
@@ -60,8 +62,10 @@ export default function PostDetailClient({
   const router = useRouter();
   const { currentUser } = useCurrentUser();
   const openConfirmModal = useConfirmModalStore(
-      (state) => state.openConfirmModal,
+    (state) => state.openConfirmModal,
   );
+  const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
+  const showToast = useToastStore((state) => state.showToast);
 
   const [detailState, setDetailState] = useState<PostDetailState>({
     post: initialPost,
@@ -120,20 +124,19 @@ export default function PostDetailClient({
       const data = (await response.json()) as DeletePostResponse;
 
       if (!response.ok) {
-        setDetailState((currentState) => ({
-          ...currentState,
-          message: data.message ?? "게시글 삭제에 실패했습니다.",
-        }));
+        openErrorModal(data.message ?? "게시글 삭제에 실패했습니다.");
         return;
       }
+
+      showToast({
+        type: "success",
+        message: "게시글이 삭제되었습니다.",
+      });
 
       router.replace(`/posts`);
       router.refresh();
     } catch {
-      setDetailState((currentState) => ({
-        ...currentState,
-        message: "게시글 삭제 요청중 오류가 발생했습니다.",
-      }));
+      openErrorModal("게시글 삭제 요청 중 오류가 발생했습니다.");
     } finally {
       setDetailState((currentState) => ({
         ...currentState,
@@ -245,89 +248,85 @@ export default function PostDetailClient({
   const isAuthor = currentUser?.id === post.author.id;
 
   return (
-      <Card>
-        <CardHeader className="flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-2xl">{post.title}</CardTitle>
+    <Card>
+      <CardHeader className="flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-2xl">{post.title}</CardTitle>
 
-          <Link
-            href="/"
-            className={buttonVariants({ variant: "ghost", size: "sm" })}
-          >
-            메인으로
+        <Link
+          href="/"
+          className={buttonVariants({ variant: "ghost", size: "sm" })}
+        >
+          메인으로
+        </Link>
+      </CardHeader>
+
+      <CardContent>
+        {message && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{message}</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="mb-6 border-b pb-4 text-sm text-muted-foreground">
+          <p>작성자 {post.author.name}</p>
+          <p>작성일 {formatDate(post.createdAt)}</p>
+          <p>수정일 {formatDate(post.updatedAt)}</p>
+          <p>
+            좋아요 {post.likeCount}개 · 댓글 {post.commentCount}개 · 북마크{" "}
+            {post.bookmarkCount}개
+          </p>
+        </div>
+
+        <div className="min-h-60 whitespace-pre-wrap text-sm leading-7">
+          {post.content}
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-2 border-t pt-4">
+          <Button type="button" variant="outline" onClick={() => router.back()}>
+            이전으로
+          </Button>
+
+          <Link href="/posts" className={buttonVariants()}>
+            목록으로
           </Link>
-        </CardHeader>
 
-        <CardContent>
-          {message && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>{message}</AlertDescription>
-            </Alert>
+          <LikeButton
+            postId={post.id}
+            liked={post.likedByCurrentUser}
+            likeCount={post.likeCount}
+            isOwnPost={isAuthor}
+            onLikeChange={handleLikeChange}
+          />
+
+          {isAuthor && (
+            <Link
+              href={`/posts/${post.id}/edit`}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              수정
+            </Link>
           )}
 
-          <div className="mb-6 border-b pb-4 text-sm text-muted-foreground">
-            <p>작성자 {post.author.name}</p>
-            <p>작성일 {formatDate(post.createdAt)}</p>
-            <p>수정일 {formatDate(post.updatedAt)}</p>
-            <p>
-              좋아요 {post.likeCount}개 · 댓글 {post.commentCount}개 · 북마크{" "}
-              {post.bookmarkCount}개
-            </p>
-          </div>
-
-          <div className="min-h-60 whitespace-pre-wrap text-sm leading-7">
-            {post.content}
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-2 border-t pt-4">
+          {isAuthor && (
             <Button
               type="button"
-              variant="outline"
-              onClick={() => router.back()}
+              onClick={handleDeletePost}
+              disabled={isDeleting}
+              variant="destructive"
             >
-              이전으로
+              {isDeleting ? "삭제 중..." : "삭제"}
             </Button>
+          )}
+        </div>
 
-            <Link href="/posts" className={buttonVariants()}>
-              목록으로
-            </Link>
-
-            <LikeButton
-              postId={post.id}
-              liked={post.likedByCurrentUser}
-              likeCount={post.likeCount}
-              isOwnPost={isAuthor}
-              onLikeChange={handleLikeChange}
-            />
-
-            {isAuthor && (
-              <Link
-                href={`/posts/${post.id}/edit`}
-                className={buttonVariants({ variant: "outline" })}
-              >
-                수정
-              </Link>
-            )}
-
-            {isAuthor && (
-              <Button
-                type="button"
-                onClick={handleDeletePost}
-                disabled={isDeleting}
-                variant="destructive"
-              >
-                {isDeleting ? "삭제 중..." : "삭제"}
-              </Button>
-            )}
-          </div>
-
-          <CommentSection
-            postId={post.id}
-            initialComments={initialComments}
-            initialPagination={initialCommentPagination}
-            onCommentCountChange={handleCommentCountChange}
-          />
-        </CardContent>
-      </Card>
+        <CommentSection
+          postId={post.id}
+          initialComments={initialComments}
+          initialPagination={initialCommentPagination}
+          onCommentCountChange={handleCommentCountChange}
+        />
+      </CardContent>
+    </Card>
   );
 }
 

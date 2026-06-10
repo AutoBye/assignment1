@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import { usePostDraftStore } from "@/lib/stores/post-draft-store";
+import { useToastStore } from "@/lib/stores/toast-store";
 
 type CreatePostResponse = {
   message?: string;
@@ -30,6 +31,7 @@ export default function PostWriteForm() {
   const resetDraft = usePostDraftStore((state) => state.resetDraft);
 
   const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
+  const showToast = useToastStore((state) => state.showToast);
 
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
@@ -76,6 +78,11 @@ export default function PostWriteForm() {
       }
 
       resetDraft();
+
+      showToast({
+        type: "success",
+        message: "게시글이 작성되었습니다.",
+      });
 
       router.replace(`/posts/${data.post.id}`);
       router.refresh();
