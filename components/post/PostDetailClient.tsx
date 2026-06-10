@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { CommentPaginationResponse } from "@/types/api";
-import type { CurrentUser } from "@/types/auth";
 import type { CommentItem } from "@/types/comment";
 import type { DeletePostResponse, PostDetail } from "@/types/post";
 import CommentSection from "@/components/comments/CommentSection";
@@ -19,6 +18,7 @@ import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatDate } from "@/lib/date";
 import LikeButton from "@/components/post/LikeButton";
+import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 // 5번 과제는 components/post/PostDetailClient.tsx에서 부모 state가 자식 콜백으로 바뀌는 흐름
 // > 자식 컴포넌트가 직접 부모 state를 바꾸는 게 아니라, 부모가 넘겨준 함수를 호출해서 부모 state를 바꾼다.
 // React 에서는 데이터 흐름을 보통 위에서 아래로 둠
@@ -33,9 +33,7 @@ import LikeButton from "@/components/post/LikeButton";
 //   → 새 props가 자식에게 내려감
 
 // 지금은 부모 - 자식 사이에서 콜백으로 해결, 컴포넌트 관계가 멀어지면 전역 상태나 서버 상태 관리 도구 필요해짐
-// TODO - Zustand, Redux, Context API를 적용
 type PostDetailClientProps = {
-  currentUser: CurrentUser | null;
   initialPost: PostDetail | null;
   initialComments: CommentItem[];
   initialCommentPagination: CommentPaginationResponse;
@@ -49,18 +47,17 @@ type PostDetailState = {
 
 /** Post 상세 화면
  * @param postId string
- * @param currentUser CurrentUser or null
  * @param initialPost PostDetail or null
  * @param initialComments CommentItem[]
  * @param initialCommentPagination CommentPaginationResponse
  * */
 export default function PostDetailClient({
-  currentUser,
   initialPost,
   initialComments,
   initialCommentPagination,
 }: PostDetailClientProps) {
   const router = useRouter();
+  const { currentUser } = useCurrentUser();
 
   const [detailState, setDetailState] = useState<PostDetailState>({
     post: initialPost,
@@ -239,87 +236,90 @@ export default function PostDetailClient({
   const isAuthor = currentUser?.id === post.author.id;
 
   return (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-2xl">{post.title}</CardTitle>
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-2xl">{post.title}</CardTitle>
 
-        <Link
-          href="/"
-          className={buttonVariants({ variant: "ghost", size: "sm" })}
-        >
-          메인으로
-        </Link>
-      </CardHeader>
-
-      <CardContent>
-        {message && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{message}</AlertDescription>
-          </Alert>
-        )}
-
-        <div className="mb-6 border-b pb-4 text-sm text-muted-foreground">
-          <p>작성자 {post.author.name}</p>
-          <p>작성일 {formatDate(post.createdAt)}</p>
-          <p>수정일 {formatDate(post.updatedAt)}</p>
-          <p>
-            좋아요 {post.likeCount}개 · 댓글 {post.commentCount}개 · 북마크{" "}
-            {post.bookmarkCount}개
-          </p>
-        </div>
-
-        <div className="min-h-60 whitespace-pre-wrap text-sm leading-7">
-          {post.content}
-        </div>
-
-        <div className="mt-6 flex flex-wrap gap-2 border-t pt-4">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
-            이전으로
-          </Button>
-
-          <Link href="/posts" className={buttonVariants()}>
-            목록으로
+          <Link
+            href="/"
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+          >
+            메인으로
           </Link>
+        </CardHeader>
 
-          <LikeButton
-            postId={post.id}
-            liked={post.likedByCurrentUser}
-            likeCount={post.likeCount}
-            isLoggedIn={currentUser !== null}
-            isOwnPost={isAuthor}
-            onLikeChange={handleLikeChange}
-          />
-
-          {isAuthor && (
-            <Link
-              href={`/posts/${post.id}/edit`}
-              className={buttonVariants({ variant: "outline" })}
-            >
-              수정
-            </Link>
+        <CardContent>
+          {message && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
           )}
 
-          {isAuthor && (
+          <div className="mb-6 border-b pb-4 text-sm text-muted-foreground">
+            <p>작성자 {post.author.name}</p>
+            <p>작성일 {formatDate(post.createdAt)}</p>
+            <p>수정일 {formatDate(post.updatedAt)}</p>
+            <p>
+              좋아요 {post.likeCount}개 · 댓글 {post.commentCount}개 · 북마크{" "}
+              {post.bookmarkCount}개
+            </p>
+          </div>
+
+          <div className="min-h-60 whitespace-pre-wrap text-sm leading-7">
+            {post.content}
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-2 border-t pt-4">
             <Button
               type="button"
-              onClick={handleDeletePost}
-              disabled={isDeleting}
-              variant="destructive"
+              variant="outline"
+              onClick={() => router.back()}
             >
-              {isDeleting ? "삭제 중..." : "삭제"}
+              이전으로
             </Button>
-          )}
-        </div>
 
-        <CommentSection
-          postId={post.id}
-          currentUser={currentUser}
-          initialComments={initialComments}
-          initialPagination={initialCommentPagination}
-          onCommentCountChange={handleCommentCountChange}
-        />
-      </CardContent>
-    </Card>
+            <Link href="/posts" className={buttonVariants()}>
+              목록으로
+            </Link>
+
+            <LikeButton
+              postId={post.id}
+              liked={post.likedByCurrentUser}
+              likeCount={post.likeCount}
+              isOwnPost={isAuthor}
+              onLikeChange={handleLikeChange}
+            />
+
+            {isAuthor && (
+              <Link
+                href={`/posts/${post.id}/edit`}
+                className={buttonVariants({ variant: "outline" })}
+              >
+                수정
+              </Link>
+            )}
+
+            {isAuthor && (
+              <Button
+                type="button"
+                onClick={handleDeletePost}
+                disabled={isDeleting}
+                variant="destructive"
+              >
+                {isDeleting ? "삭제 중..." : "삭제"}
+              </Button>
+            )}
+          </div>
+
+          <CommentSection
+            postId={post.id}
+            currentUser={currentUser}
+            initialComments={initialComments}
+            initialPagination={initialCommentPagination}
+            onCommentCountChange={handleCommentCountChange}
+          />
+        </CardContent>
+      </Card>
   );
 }
 

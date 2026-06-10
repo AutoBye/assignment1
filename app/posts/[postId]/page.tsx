@@ -4,6 +4,7 @@ import PostDetailClient from "@/components/post/PostDetailClient";
 import { getCurrentUser } from "@/lib/auth";
 import { getCommentsByPostId } from "@/lib/comments";
 import { getPostDetail } from "@/lib/posts";
+import { CurrentUserProvider } from "@/components/providers/CurrentUserProvider";
 
 type PostDetailPageProps = {
   params: Promise<{
@@ -16,25 +17,24 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
   const { postId } = await params;
 
   const [post, commentsResult] = await Promise.all([
-      getPostDetail(postId, currentUser?.id),
-      getCommentsByPostId(postId, 1),
+    getPostDetail(postId, currentUser?.id),
+    getCommentsByPostId(postId, 1),
   ]);
 
   return (
-      <div className="min-h-screen bg-muted/40">
-          <Header currentUser={currentUser} />
-
-          <main className="mx-auto max-w-4xl p-4">
-              <PostDetailClient
-                  key={postId}
-                  currentUser={currentUser}
-                  initialPost={post}
-                  initialComments={commentsResult.comments}
-                  initialCommentPagination={commentsResult.pagination}
-              />
-          </main>
-
-          <Footer />
-      </div>
+    <div className="min-h-screen bg-muted/40">
+      <Header currentUser={currentUser} />
+      <main className="mx-auto max-w-4xl p-4">
+        <CurrentUserProvider currentUser={currentUser}>
+          <PostDetailClient
+            key={postId}
+            initialPost={post}
+            initialComments={commentsResult.comments}
+            initialCommentPagination={commentsResult.pagination}
+          />
+        </CurrentUserProvider>
+      </main>
+      <Footer />
+    </div>
   );
 }

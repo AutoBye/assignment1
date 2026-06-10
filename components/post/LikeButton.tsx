@@ -1,13 +1,13 @@
 import { useState } from "react";
+import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { LikeButtonResponse } from "@/types/post";
+import type { LikeButtonResponse } from "@/types/post";
 
 type LikeButtonProps = {
   postId: string;
   liked: boolean;
   likeCount: number;
-  isLoggedIn: boolean;
   isOwnPost: boolean;
   onLikeChange?: (likeCount: number, liked: boolean) => void;
 };
@@ -16,18 +16,19 @@ export default function LikeButton({
   postId,
   liked,
   likeCount,
-  isLoggedIn,
   isOwnPost,
   onLikeChange,
 }: LikeButtonProps) {
-
-  // 얘는 liked랑 likeCount를 state로 두지 않아서 줄어들었으니까 묶는거 풀자
+  // liked와 likeCount는 부모 상태를 기준으로 렌더링한다.
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { isLoggedIn } = useCurrentUser();
 
   async function handleClick() {
+    setMessage("");
+
     if (!isLoggedIn) {
-      setMessage("좋아요를 누르려면 로그인이 필요합니다.")
+      setMessage("좋아요를 누르려면 로그인이 필요합니다.");
       return;
     }
 
@@ -46,7 +47,7 @@ export default function LikeButton({
       const data = (await response.json()) as LikeButtonResponse;
 
       if (!response.ok) {
-        setMessage(data.message ?? "좋아요 처리에 실패했습니다");
+        setMessage(data.message ?? "좋아요 처리에 실패했습니다.");
         return;
       }
 
@@ -67,30 +68,30 @@ export default function LikeButton({
   }
 
   return (
-      <div className="space-y-2">
-        <Button
-            type="button"
-            onClick={handleClick}
-            disabled={isLoading}
-            variant="outline"
-            className={
-              liked
-                  ? "border-primary/50 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
-                  : "hover:border-primary/40 hover:bg-primary/5"
-            }
-        >
-          {isLoading
-              ? "처리 중..."
-              : liked
-                  ? `좋아요 취소 ${likeCount}`
-                  : `좋아요 ${likeCount}`}
-        </Button>
+    <div className="space-y-2">
+      <Button
+        type="button"
+        onClick={handleClick}
+        disabled={isLoading}
+        variant="outline"
+        className={
+          liked
+            ? "border-primary/50 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+            : "hover:border-primary/40 hover:bg-primary/5"
+        }
+      >
+        {isLoading
+          ? "처리 중..."
+          : liked
+            ? `좋아요 취소 ${likeCount}`
+            : `좋아요 ${likeCount}`}
+      </Button>
 
-        {message && (
-            <Alert variant="destructive">
-              <AlertDescription>{message}</AlertDescription>
-            </Alert>
-        )}
-      </div>
+      {message && (
+        <Alert variant="destructive">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
+    </div>
   );
 }
