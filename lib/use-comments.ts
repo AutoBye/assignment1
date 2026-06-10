@@ -18,6 +18,7 @@ import type {
   DeleteCommentResponse,
   UpdateCommentResponse,
 } from "@/types/comment";
+import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 
 type UseCommentsParams = {
   postId: string;
@@ -127,6 +128,10 @@ export function useComments({
     replyingToCommentId: null,
     submittingReplyParentId: null,
   });
+  //얘도 훅이다? 조건문 안이 아닌 state들과 같이 호출해
+  const openErrorModal = useErrorModalStore(
+      (state) => state.openErrorModal,
+  );
 
   const setContent = (content: string) => {
     setFormState((currentState) => ({
@@ -167,10 +172,7 @@ export function useComments({
       const data = await readJson<CommentsResponse>(response);
 
       if (!response.ok) {
-        setStatusState((currentState) => ({
-          ...currentState,
-          message: data?.message ?? "댓글 조회에 실패했습니다.",
-        }));
+        openErrorModal(data?.message ?? "댓글 조회에 실패했습니다.");
         return;
       }
 
@@ -184,10 +186,7 @@ export function useComments({
         });
       }
     } catch {
-      setStatusState((currentState) => ({
-        ...currentState,
-        message: "댓글 조회 요청 중 오류가 발생했습니다.",
-      }));
+      openErrorModal("댓글 조회 요청 중 오류가 발생했습니다.");
     } finally {
       setStatusState((currentState) => ({
         ...currentState,
@@ -234,18 +233,12 @@ export function useComments({
       const data = await readJson<CreateCommentResponse>(response);
 
       if (!response.ok) {
-        setStatusState((currentState) => ({
-          ...currentState,
-          message: data?.message ?? "댓글 작성에 실패했습니다.",
-        }));
+        openErrorModal(data?.message ?? "댓글 작성에 실패했습니다.");
         return;
       }
 
       if (!data?.comment) {
-        setStatusState((currentState) => ({
-          ...currentState,
-          message: "댓글 작성 응답이 올바르지 않습니다.",
-        }));
+        openErrorModal("댓글 작성 응답이 올바르지 않습니다.");
         return;
       }
 
@@ -254,10 +247,7 @@ export function useComments({
 
       await loadComments(1);
     } catch {
-      setStatusState((currentState) => ({
-        ...currentState,
-        message: "댓글 작성 요청 중 오류가 발생했습니다.",
-      }));
+      openErrorModal("댓글 작성 요청 중 오류가 발생했습니다.");
     } finally {
       setStatusState((currentState) => ({
         ...currentState,
@@ -305,20 +295,14 @@ export function useComments({
       const data = await readJson<CreateCommentResponse>(response);
 
       if (!response.ok) {
-        setStatusState((currentState) => ({
-          ...currentState,
-          message: data?.message ?? "답글 작성에 실패했습니다.",
-        }));
+        openErrorModal(data?.message ?? "답글 작성에 실패했습니다.");
         return;
       }
 
       const createdReply = data?.comment;
 
       if (!createdReply) {
-        setStatusState((currentState) => ({
-          ...currentState,
-          message: "답글 작성 응답이 올바르지 않습니다.",
-        }));
+        openErrorModal("답글 작성 응답이 올바르지 않습니다.");
         return;
       }
 
@@ -335,10 +319,7 @@ export function useComments({
       }));
       onCommentCountChange?.(1);
     } catch {
-      setStatusState((currentState) => ({
-        ...currentState,
-        message: "답글 작성 요청 중 오류가 발생했습니다.",
-      }));
+      openErrorModal("답글 작성 요청 중 오류가 발생했습니다.");
     } finally {
       setTargetState((currentState) => ({
         ...currentState,
@@ -449,20 +430,14 @@ export function useComments({
       const data = await readJson<UpdateCommentResponse>(response);
 
       if (!response.ok) {
-        setStatusState((currentState) => ({
-          ...currentState,
-          message: data?.message ?? "댓글 수정에 실패했습니다.",
-        }));
+        openErrorModal(data?.message ?? "댓글 수정에 실패했습니다.");
         return;
       }
 
       const updatedComment = data?.comment;
 
       if (!updatedComment) {
-        setStatusState((currentState) => ({
-          ...currentState,
-          message: "댓글 수정 응답이 올바르지 않습니다.",
-        }));
+        openErrorModal("댓글 수정 응답이 올바르지 않습니다.");
         return;
       }
 
@@ -479,10 +454,7 @@ export function useComments({
         editingContent: "",
       }));
     } catch {
-      setStatusState((currentState) => ({
-        ...currentState,
-        message: "댓글 수정 요청 중 오류가 발생했습니다.",
-      }));
+      openErrorModal("댓글 수정 요청 중 오류가 발생했습니다.");
     } finally {
       setTargetState((currentState) => ({
         ...currentState,
@@ -517,10 +489,7 @@ export function useComments({
       const data = await readJson<DeleteCommentResponse>(response);
 
       if (!response.ok) {
-        setStatusState((currentState) => ({
-          ...currentState,
-          message: data?.message ?? "댓글 삭제에 실패했습니다.",
-        }));
+        openErrorModal(data?.message ?? "댓글 삭제에 실패했습니다.");
         return;
       }
 
@@ -532,10 +501,7 @@ export function useComments({
 
       await loadComments(paginationState.currentPage);
     } catch {
-      setStatusState((currentState) => ({
-        ...currentState,
-        message: "댓글 삭제 요청 중 오류가 발생했습니다.",
-      }));
+      openErrorModal("댓글 삭제 요청 중 오류가 발생했습니다.");
     } finally {
       setTargetState((currentState) => ({
         ...currentState,

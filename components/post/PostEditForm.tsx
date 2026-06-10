@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
+import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 
 type PostEditFormProps = {
   postId: string;
@@ -46,6 +47,8 @@ export default function PostEditForm({ postId }: PostEditFormProps) {
     isSubmitting: false,
     isAuthor: false,
   });
+
+  const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
 
   // console.log("PostEditForm render", {
   //   postId,
@@ -176,19 +179,13 @@ export default function PostEditForm({ postId }: PostEditFormProps) {
 
       // 반응 X
       if (!response.ok) {
-        setFormState((currentState) => ({
-          ...currentState,
-          message: data.message ?? "게시글 수정에 실패했습니다.",
-        }));
+        openErrorModal(data.message ?? "게시글 수정에 실패했습니다.");
         return;
       }
 
       // 응답 정상 X
       if (!data.post) {
-        setFormState((currentState) => ({
-          ...currentState,
-          message: "게시글 수정 응답이 올바르지 않습니다.",
-        }));
+        openErrorModal("게시글 수정 응답이 올바르지 않습니다.");
         return;
       }
 
@@ -197,10 +194,7 @@ export default function PostEditForm({ postId }: PostEditFormProps) {
       router.replace(`/posts/${updatedPost.id}`);
       router.refresh();
     } catch {
-      setFormState((currentState) => ({
-        ...currentState,
-        message: "게시글 수정 요청 중 오류가 발생했습니다.",
-      }));
+      openErrorModal("게시글 수정 요청 중 오류가 발생했습니다.");
     } finally {
       setFormState((currentState) => ({
         ...currentState,

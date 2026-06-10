@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { LikeButtonResponse } from "@/types/post";
+import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 
 type LikeButtonProps = {
   postId: string;
@@ -20,20 +20,20 @@ export default function LikeButton({
   onLikeChange,
 }: LikeButtonProps) {
   // liked와 likeCount는 부모 상태를 기준으로 렌더링한다.
-  const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { isLoggedIn } = useCurrentUser();
+  // selector을 쓴다.
+  // store 전체를 구독하면 불필요한 리렌더링이 늘어남
+  const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
 
   async function handleClick() {
-    setMessage("");
-
     if (!isLoggedIn) {
-      setMessage("좋아요를 누르려면 로그인이 필요합니다.");
+      openErrorModal("좋아요를 누르려면 로그인이 필요합니다.");
       return;
     }
 
     if (isOwnPost) {
-      setMessage("자신이 작성한 글에는 좋아요를 누를 수 없습니다.");
+      openErrorModal("자신이 작성한 글에는 좋아요를 누를 수 없습니다.");
       return;
     }
 
@@ -47,7 +47,7 @@ export default function LikeButton({
       const data = (await response.json()) as LikeButtonResponse;
 
       if (!response.ok) {
-        setMessage(data.message ?? "좋아요 처리에 실패했습니다.");
+        openErrorModal(data.message ?? "좋아요 처리에 실패했습니다.");
         return;
       }
 
@@ -55,13 +55,13 @@ export default function LikeButton({
         typeof data.liked !== "boolean" ||
         typeof data.likeCount !== "number"
       ) {
-        setMessage("좋아요 응답이 올바르지 않습니다.");
+        openErrorModal("좋아요 응답이 올바르지 않습니다.");
         return;
       }
 
       onLikeChange?.(data.likeCount, data.liked);
     } catch {
-      setMessage("좋아요 요청 중 오류가 발생했습니다.");
+      openErrorModal("좋아요 요청 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
     }
@@ -86,12 +86,6 @@ export default function LikeButton({
             ? `좋아요 취소 ${likeCount}`
             : `좋아요 ${likeCount}`}
       </Button>
-
-      {message && (
-        <Alert variant="destructive">
-          <AlertDescription>{message}</AlertDescription>
-        </Alert>
-      )}
     </div>
   );
 }
