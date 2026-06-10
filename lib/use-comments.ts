@@ -19,6 +19,7 @@ import type {
   UpdateCommentResponse,
 } from "@/types/comment";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
+import {useConfirmModalStore} from "@/lib/stores/confirm-modal-store";
 
 type UseCommentsParams = {
   postId: string;
@@ -131,6 +132,9 @@ export function useComments({
   //얘도 훅이다? 조건문 안이 아닌 state들과 같이 호출해
   const openErrorModal = useErrorModalStore(
       (state) => state.openErrorModal,
+  );
+  const openConfirmModal = useConfirmModalStore(
+      (state) => state.openConfirmModal,
   );
 
   const setContent = (content: string) => {
@@ -464,7 +468,12 @@ export function useComments({
   }
 
   async function deleteComment(commentId: string) {
-    const confirmed = window.confirm("댓글을 삭제하시겠습니까?");
+    const confirmed = await openConfirmModal({
+      title: "댓글 삭제",
+      message: "댓글을 삭제하시겠습니까?",
+      confirmText: "삭제",
+      cancelText: "취소",
+    });
 
     if (!confirmed) {
       return;

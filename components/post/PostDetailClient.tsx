@@ -19,6 +19,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatDate } from "@/lib/date";
 import LikeButton from "@/components/post/LikeButton";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
+import {useConfirmModalStore} from "@/lib/stores/confirm-modal-store";
 // 5번 과제는 components/post/PostDetailClient.tsx에서 부모 state가 자식 콜백으로 바뀌는 흐름
 // > 자식 컴포넌트가 직접 부모 state를 바꾸는 게 아니라, 부모가 넘겨준 함수를 호출해서 부모 state를 바꾼다.
 // React 에서는 데이터 흐름을 보통 위에서 아래로 둠
@@ -58,6 +59,9 @@ export default function PostDetailClient({
 }: PostDetailClientProps) {
   const router = useRouter();
   const { currentUser } = useCurrentUser();
+  const openConfirmModal = useConfirmModalStore(
+      (state) => state.openConfirmModal,
+  );
 
   const [detailState, setDetailState] = useState<PostDetailState>({
     post: initialPost,
@@ -91,7 +95,12 @@ export default function PostDetailClient({
       return;
     }
 
-    const confirmed = window.confirm("정말 이 게시글을 삭제하시겠습니까?");
+    const confirmed = await openConfirmModal({
+      title: "게시글 삭제",
+      message: "게시글을 삭제하시겠습니까?",
+      confirmText: "삭제",
+      cancelText: "취소",
+    });
 
     if (!confirmed) {
       return;
