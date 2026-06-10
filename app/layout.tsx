@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import ErrorModal from "@/components/common/ErrorModal";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import ToastViewport from "@/components/common/ToastViewport";
+import QueryProvider from "@/components/providers/QueryProvider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -41,10 +42,12 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full flex flex-col">
-        {children}
-        <ErrorModal />
-        <ConfirmModal />
-        <ToastViewport />
+        <QueryProvider>
+          {children}
+          <ErrorModal />
+          <ConfirmModal />
+          <ToastViewport />
+        </QueryProvider>
       </body>
     </html>
   );

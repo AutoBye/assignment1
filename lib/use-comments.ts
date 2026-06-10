@@ -4,16 +4,9 @@ import {
   COMMENT_CONTENT_MIN_LENGTH,
   COMMENTS_PER_PAGE,
 } from "@/lib/constants";
-import {
-  appendComment,
-  findDeleteCount,
-  removeCommentFromTree,
-  updateCommentInTree,
-} from "@/lib/comment-tree";
 import type { CommentPaginationResponse } from "@/types/api";
 import type {
   CommentItem,
-  CommentsResponse,
   CreateCommentResponse,
   DeleteCommentResponse,
   UpdateCommentResponse,
@@ -21,6 +14,8 @@ import type {
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import { useConfirmModalStore } from "@/lib/stores/confirm-modal-store";
 import { useToastStore } from "@/lib/stores/toast-store";
+import {useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchComments } from "@/lib/queries/comments-query";
 
 type UseCommentsParams = {
   postId: string;
@@ -37,14 +32,11 @@ type CommentFormState = {
 
 type CommentStatusState = {
   message: string;
-  isLoading: boolean;
   isSubmitting: boolean;
 };
 
 type CommentPaginationState = {
   currentPage: number;
-  totalPages: number;
-  totalRootCommentCount: number;
 };
 
 type CommentTargetState = {
@@ -106,23 +98,31 @@ export function useComments({
   initialPagination = DEFAULT_COMMENT_PAGINATION,
   onCommentCountChange,
 }: UseCommentsParams) {
-  const [comments, setComments] = useState<CommentItem[]>(initialComments);
+  const queryClient = useQueryClient();
+
+  //얘도 훅이다? 조건문 안이 아닌 state들과 같이 호출해
+  const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
+  const openConfirmModal = useConfirmModalStore(
+      (state) => state.openConfirmModal,
+  );
+  const showToast = useToastStore((state) => state.showToast);
+
   const [formState, setFormState] = useState<CommentFormState>({
     content: "",
     editingContent: "",
     replyContent: "",
   });
+
   const [statusState, setStatusState] = useState<CommentStatusState>({
     message: "",
-    isLoading: false,
     isSubmitting: false,
   });
+
   const [paginationState, setPaginationState] =
     useState<CommentPaginationState>({
       currentPage: initialPagination.currentPage,
-      totalPages: initialPagination.totalPages,
-      totalRootCommentCount: initialPagination.totalRootCommentCount,
     });
+
   const [targetState, setTargetState] = useState<CommentTargetState>({
     deletingCommentId: null,
     editingCommentId: null,
@@ -130,12 +130,18 @@ export function useComments({
     replyingToCommentId: null,
     submittingReplyParentId: null,
   });
-  //얘도 훅이다? 조건문 안이 아닌 state들과 같이 호출해
-  const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
-  const openConfirmModal = useConfirmModalStore(
-    (state) => state.openConfirmModal,
-  );
-  const showToast = useToastStore((state) => state.showToast);
+
+  const commentsQuery = useQuery({
+    queryKey: ["comments", postId, paginationState.currentPage],
+    queryFn: () => fetchComments(postId, paginationState.currentPage),
+    initialData: {
+      comments: initialComments,
+      pagination: initialPagination,
+    },
+  });
+
+  const comments = commentsQuery.data.comments;
+  const pagination = commentsQuery.data.pagination;
 
   const setContent = (content: string) => {
     setFormState((currentState) => ({
@@ -158,45 +164,16 @@ export function useComments({
     }));
   };
 
-  async function loadComments(page: number) {
-    setStatusState((currentState) => ({
-      ...currentState,
-      isLoading: true,
-      message: "",
-    }));
+  function loadComments(page: number) {
+    setPaginationState({
+      currentPage: page,
+    });
+  }
 
-    try {
-      const response = await fetch(
-        `/api/posts/${postId}/comments?page=${page}`,
-        {
-          method: "GET",
-        },
-      );
-
-      const data = await readJson<CommentsResponse>(response);
-
-      if (!response.ok) {
-        openErrorModal(data?.message ?? "댓글 조회에 실패했습니다.");
-        return;
-      }
-
-      setComments(data?.comments ?? []);
-
-      if (data?.pagination) {
-        setPaginationState({
-          currentPage: data.pagination.currentPage,
-          totalPages: data.pagination.totalPages,
-          totalRootCommentCount: data.pagination.totalRootCommentCount,
-        });
-      }
-    } catch {
-      openErrorModal("댓글 조회 요청 중 오류가 발생했습니다.");
-    } finally {
-      setStatusState((currentState) => ({
-        ...currentState,
-        isLoading: false,
-      }));
-    }
+  async function invalidateComments() {
+    await queryClient.invalidateQueries({
+      queryKey: ["comments", postId],
+    });
   }
 
   async function createComment() {
@@ -249,12 +226,16 @@ export function useComments({
       setContent("");
       onCommentCountChange?.(1);
 
+      setPaginationState({
+        currentPage: 1,
+      });
+
+      await invalidateComments();
+
       showToast({
         type: "success",
         message: "댓글이 작성되었습니다.",
       });
-
-      await loadComments(1);
     } catch {
       openErrorModal("댓글 작성 요청 중 오류가 발생했습니다.");
     } finally {
@@ -315,24 +296,24 @@ export function useComments({
         return;
       }
 
-      setComments((currentComments) =>
-        appendComment(currentComments, createdReply),
-      );
       setFormState((currentState) => ({
         ...currentState,
         replyContent: "",
       }));
+
       setTargetState((currentState) => ({
         ...currentState,
         replyingToCommentId: null,
       }));
 
+      onCommentCountChange?.(1);
+
+      await invalidateComments();
+
       showToast({
         type: "success",
         message: "답글이 작성되었습니다.",
       });
-
-      onCommentCountChange?.(1);
     } catch {
       openErrorModal("답글 작성 요청 중 오류가 발생했습니다.");
     } finally {
@@ -344,15 +325,18 @@ export function useComments({
   }
 
   function startEditComment(comment: CommentItem) {
+
     setStatusState((currentState) => ({
       ...currentState,
       message: "",
     }));
+
     setTargetState((currentState) => ({
       ...currentState,
       replyingToCommentId: null,
       editingCommentId: comment.id,
     }));
+
     setFormState((currentState) => ({
       ...currentState,
       replyContent: "",
@@ -361,14 +345,17 @@ export function useComments({
   }
 
   function cancelEditComment() {
+
     setStatusState((currentState) => ({
       ...currentState,
       message: "",
     }));
+
     setTargetState((currentState) => ({
       ...currentState,
       editingCommentId: null,
     }));
+
     setFormState((currentState) => ({
       ...currentState,
       editingContent: "",
@@ -376,15 +363,18 @@ export function useComments({
   }
 
   function startReply(commentId: string) {
+
     setStatusState((currentState) => ({
       ...currentState,
       message: "",
     }));
+
     setTargetState((currentState) => ({
       ...currentState,
       editingCommentId: null,
       replyingToCommentId: commentId,
     }));
+
     setFormState((currentState) => ({
       ...currentState,
       editingContent: "",
@@ -393,14 +383,17 @@ export function useComments({
   }
 
   function cancelReply() {
+
     setStatusState((currentState) => ({
       ...currentState,
       message: "",
     }));
+
     setTargetState((currentState) => ({
       ...currentState,
       replyingToCommentId: null,
     }));
+
     setFormState((currentState) => ({
       ...currentState,
       replyContent: "",
@@ -449,25 +442,23 @@ export function useComments({
         return;
       }
 
-      const updatedComment = data?.comment;
-
-      if (!updatedComment) {
+      if (!data?.comment) {
         openErrorModal("댓글 수정 응답이 올바르지 않습니다.");
         return;
       }
 
-      setComments((currentComments) =>
-        updateCommentInTree(currentComments, updatedComment),
-      );
 
       setTargetState((currentState) => ({
         ...currentState,
         editingCommentId: null,
       }));
+
       setFormState((currentState) => ({
         ...currentState,
         editingContent: "",
       }));
+
+      await invalidateComments();
 
       showToast({
         type: "success",
@@ -499,13 +490,24 @@ export function useComments({
       ...currentState,
       message: "",
     }));
+
     setTargetState((currentState) => ({
       ...currentState,
       deletingCommentId: commentId,
     }));
 
     try {
-      const deleteCount = findDeleteCount(comments, commentId);
+      const deleteCount = comments.reduce((count, comment) => {
+        if (comment.id === commentId) {
+          return count + 1 + comment.replies.length;
+        }
+
+        const matchedReply = comment.replies.some(
+            (reply) => reply.id === commentId,
+        );
+
+        return matchedReply ? count + 1 : count;
+      }, 0);
 
       const response = await fetch(`/api/comments/${commentId}`, {
         method: "DELETE",
@@ -518,18 +520,14 @@ export function useComments({
         return;
       }
 
-      setComments((currentComments) =>
-        removeCommentFromTree(currentComments, commentId),
-      );
-
       onCommentCountChange?.(-deleteCount);
+
+      await invalidateComments();
 
       showToast({
         type: "success",
         message: "댓글이 삭제되었습니다.",
       });
-
-      await loadComments(paginationState.currentPage);
     } catch {
       openErrorModal("댓글 삭제 요청 중 오류가 발생했습니다.");
     } finally {
@@ -545,11 +543,11 @@ export function useComments({
     content: formState.content,
     setContent,
     message: statusState.message,
-    isLoading: statusState.isLoading,
+    isLoading: commentsQuery.isFetching,
     isSubmitting: statusState.isSubmitting,
-    currentPage: paginationState.currentPage,
-    totalPages: paginationState.totalPages,
-    totalRootCommentCount: paginationState.totalRootCommentCount,
+    currentPage: pagination.currentPage,
+    totalPages: pagination.totalPages,
+    totalRootCommentCount: pagination.totalRootCommentCount,
     deletingCommentId: targetState.deletingCommentId,
     editingCommentId: targetState.editingCommentId,
     editingContent: formState.editingContent,
