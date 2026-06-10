@@ -2,12 +2,11 @@ import { formatDate } from "@/lib/date";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import type { CurrentUser } from "@/types/auth";
 import type { CommentItem } from "@/types/comment";
+import {useCurrentUser} from "@/components/providers/CurrentUserProvider";
 
 type CommentReplyCardProps = {
   reply: CommentItem;
-  currentUser: CurrentUser | null;
   editingCommentId: string | null;
   editingContent: string;
   updatingCommentId: string | null;
@@ -21,7 +20,6 @@ type CommentReplyCardProps = {
 
 export function CommentReplyCard({
   reply,
-  currentUser,
   editingCommentId,
   editingContent,
   updatingCommentId,
@@ -32,6 +30,7 @@ export function CommentReplyCard({
   onDelete,
   onEditingContentChange,
 }: CommentReplyCardProps) {
+  const { currentUser } = useCurrentUser();
   const isReplyAuthor = currentUser?.id === reply.author.id;
   const isReplyEditing = editingCommentId === reply.id;
   const isReplyUpdating = updatingCommentId === reply.id;

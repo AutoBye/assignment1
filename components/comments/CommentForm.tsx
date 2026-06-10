@@ -1,10 +1,9 @@
-import type { CurrentUser } from "@/types/auth";
 import { SubmitEventHandler } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {useCurrentUser} from "@/components/providers/CurrentUserProvider";
 
 type CommentFormProps = {
-  currentUser: CurrentUser | null;
   content: string;
   isSubmitting: boolean;
   onContentChange: (content: string) => void;
@@ -12,12 +11,13 @@ type CommentFormProps = {
 };
 
 export function CommentForm({
-  currentUser,
   content,
   isSubmitting,
   onContentChange,
   onSubmit,
 }: CommentFormProps) {
+
+	const { currentUser } = useCurrentUser();
 
 	if (!currentUser) {
 		return (

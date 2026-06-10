@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { SubmitEventHandler } from "react";
-import type { CurrentUser } from "@/types/auth";
 import type { PostDetailResponse, UpdatePostResponse } from "@/types/post";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -18,10 +17,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 
 type PostEditFormProps = {
   postId: string;
-  currentUser: CurrentUser;
 };
 
 type PostEditFormState = {
@@ -33,11 +32,11 @@ type PostEditFormState = {
   isAuthor: boolean;
 };
 
-export default function PostEditForm({
-  postId,
-  currentUser,
-}: PostEditFormProps) {
+export default function PostEditForm({ postId }: PostEditFormProps) {
   const router = useRouter();
+
+  const { currentUser } = useCurrentUser();
+  const currentUserId = currentUser?.id;
 
   const [formState, setFormState] = useState<PostEditFormState>({
     title: "",
@@ -58,17 +57,14 @@ export default function PostEditForm({
   // 2. useEffect 실행 시점
   // 3. cleanup 함수 실행 시점
   useEffect(() => {
-    console.log("PostEditForm effect start", {
-      postId,
-      currentUserId: currentUser.id,
-    });
+    if (!currentUserId) {
+      return;
+    }
 
     const abortController = new AbortController();
 
     async function fetchPost() {
       try {
-        console.log("fetchPost start");
-
         setFormState((currentState) => ({
           ...currentState,
           message: "",
@@ -110,7 +106,7 @@ export default function PostEditForm({
 
         // 자기가 쓴 글인가
         const post = data.post;
-        if (post.author.id !== currentUser.id) {
+        if (post.author.id !== currentUserId) {
           setFormState((currentState) => ({
             ...currentState,
             message: "게시글을 수정할 권한이 없습니다.",
@@ -128,7 +124,6 @@ export default function PostEditForm({
         }));
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {
-          console.log("fetchPost aborted");
           return;
         }
 
@@ -139,8 +134,6 @@ export default function PostEditForm({
         }));
       } finally {
         if (!abortController.signal.aborted) {
-          console.log("fetchPost finally");
-
           setFormState((currentState) => ({
             ...currentState,
             isLoading: false,
@@ -155,7 +148,7 @@ export default function PostEditForm({
       console.log("PostEditForm effect cleanup");
       abortController.abort();
     };
-  }, [postId, currentUser.id]);
+  }, [postId, currentUserId]);
 
   // 수정 핸들러
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {

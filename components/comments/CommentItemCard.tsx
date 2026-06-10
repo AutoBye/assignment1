@@ -1,14 +1,13 @@
 import { formatDate } from "@/lib/date";
 import { CommentItem } from "@/types/comment";
-import { CurrentUser } from "@/types/auth";
 import {CommentReplyCard} from "@/components/comments/CommentReplyCard";
 import {Button} from "@/components/ui/button";
 import {Card, CardContent} from "@/components/ui/card";
 import {Textarea} from "@/components/ui/textarea";
+import {useCurrentUser} from "@/components/providers/CurrentUserProvider";
 
 type CommentItemCardProps = {
   comment: CommentItem;
-  currentUser: CurrentUser | null;
   editingCommentId: string | null;
   editingContent: string;
   updatingCommentId: string | null;
@@ -29,7 +28,6 @@ type CommentItemCardProps = {
 
 export function CommentItemCard({
   comment,
-  currentUser,
   editingCommentId,
   editingContent,
   updatingCommentId,
@@ -47,6 +45,8 @@ export function CommentItemCard({
   onEditingContentChange,
   onReplyContentChange,
 }: CommentItemCardProps) {
+  const { currentUser } = useCurrentUser();
+
   const isAuthor = currentUser?.id === comment.author.id;
   const isEditing = editingCommentId === comment.id;
   const isUpdating = updatingCommentId === comment.id;
@@ -178,7 +178,6 @@ export function CommentItemCard({
               <CommentReplyCard
                 key={reply.id}
                 reply={reply}
-                currentUser={currentUser}
                 editingCommentId={editingCommentId}
                 editingContent={editingContent}
                 updatingCommentId={updatingCommentId}

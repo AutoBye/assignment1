@@ -313,7 +313,6 @@ export default function PostDetailClient({
 
           <CommentSection
             postId={post.id}
-            currentUser={currentUser}
             initialComments={initialComments}
             initialPagination={initialCommentPagination}
             onCommentCountChange={handleCommentCountChange}
