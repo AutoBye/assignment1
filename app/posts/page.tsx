@@ -8,16 +8,22 @@ import { getPosts } from "@/lib/posts";
 type PostsPageProps = {
   searchParams: Promise<{
     page?: string;
+    q?: string;
   }>;
 };
 
 //06-09 getPosts() 다른곳으로 날림
 export default async function PostsPage({ searchParams }: PostsPageProps) {
   const currentUser = await getCurrentUser();
-  const { page } = await searchParams;
-  const requestedPage = getPositivePageNumber(page);
+  const { page, q } = await searchParams;
 
-  const { posts, currentPage, totalPages } = await getPosts(requestedPage);
+  const requestedPage = getPositivePageNumber(page);
+  const query = typeof q === "string" ? q : "";
+
+  const { posts, currentPage, totalPages, totalPostCount } = await getPosts(
+    requestedPage,
+    query,
+  );
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -28,6 +34,8 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
           posts={posts}
           currentPage={currentPage}
           totalPages={totalPages}
+          totalPostCount={totalPostCount}
+          query={query}
         />
       </main>
 
