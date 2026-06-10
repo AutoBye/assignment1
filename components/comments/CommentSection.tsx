@@ -9,7 +9,6 @@ import type { CommentItem } from "@/types/comment";
 import {CommentPagination} from "@/components/comments/CommentPagination";
 import {CommentForm} from "@/components/comments/CommentForm";
 import {CommentItemCard} from "@/components/comments/CommentItemCard";
-import {useCurrentUser} from "@/components/providers/CurrentUserProvider";
 
 type CommentSectionProps = {
   postId: string;
@@ -43,7 +42,6 @@ export default function CommentSection({
     initialPagination,
     onCommentCountChange,
   });
-  const { currentUser } = useCurrentUser();
 
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
@@ -91,7 +89,6 @@ export default function CommentSection({
               <CommentItemCard
                 key={comment.id}
                 comment={comment}
-                currentUser={currentUser}
                 editingCommentId={commentsState.editingCommentId}
                 editingContent={commentsState.editingContent}
                 updatingCommentId={commentsState.updatingCommentId}

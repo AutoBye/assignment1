@@ -9,6 +9,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 
 type CreatePostResponse = {
   message?: string;
@@ -24,6 +25,10 @@ export default function PostWriteForm() {
   const [content, setContent] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const openErrorModal = useErrorModalStore(
+      (state) => state.openErrorModal,
+  );
 
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
@@ -48,19 +53,19 @@ export default function PostWriteForm() {
       const data = (await response.json()) as CreatePostResponse;
 
       if (!response.ok) {
-        setMessage(data.message ?? "게시글 작성에 실패했습니다.");
+        openErrorModal(data.message ?? "게시글 작성에 실패했습니다.");
         return;
       }
 
       if (!data.post) {
-        setMessage("게시글 작성 응답이 올바르지 않습니다.");
+        openErrorModal("게시글 작성 응답이 올바르지 않습니다.");
         return;
       }
 
       router.replace(`/posts/${data.post.id}`);
       router.refresh();
     } catch {
-      setMessage("게시글 작성 요청 중 오류가 발생했습니다.");
+      openErrorModal("게시글 작성 요청 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
     }
