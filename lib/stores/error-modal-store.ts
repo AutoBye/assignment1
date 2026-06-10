@@ -1,29 +1,47 @@
+//zustand 연습
 import { create } from "zustand";
 
-//zustand 연습
+// devtools
+import { devtools } from "zustand/middleware";
+
 type ErrorModalState = {
-	isOpen: boolean;
-	title: string;
-	message: string;
-	openErrorModal: (message: string, title?:string) => void;
-	closeErrorModal: () => void;
+  isOpen: boolean;
+  title: string;
+  message: string;
+  openErrorModal: (message: string, title?: string) => void;
+  closeErrorModal: () => void;
 };
 
-export const useErrorModalStore = create<ErrorModalState>((set) => ({
-	isOpen: false,
-	title: "에러",
-	message: "",
+export const useErrorModalStore = create<ErrorModalState>()(
+  devtools(
+    (set) => ({
+      isOpen: false,
+      title: "오류",
+      message: "",
 
-	openErrorModal: (message, title = "에러") =>
-		set({
-			isOpen: true,
-			title,
-			message,
-		}),
+      openErrorModal: (message, title = "오류") =>
+        set(
+          {
+            isOpen: true,
+            title,
+            message,
+          },
+          false,
+          "errorModal/open",
+        ),
 
-	closeErrorModal: () =>
-		set({
-			isOpen: false,
-			message: "",
-		}),
-}));
+      closeErrorModal: () =>
+        set(
+          {
+            isOpen: false,
+            message: "",
+          },
+          false,
+          "errorModal/close",
+        ),
+    }),
+    {
+      name: "error-modal-store",
+    },
+  ),
+);
