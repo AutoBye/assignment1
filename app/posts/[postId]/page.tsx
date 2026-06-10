@@ -27,7 +27,6 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
           <main className="mx-auto max-w-4xl p-4">
               <PostDetailClient
                   key={postId}
-                  postId={postId}
                   currentUser={currentUser}
                   initialPost={post}
                   initialComments={commentsResult.comments}
