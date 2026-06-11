@@ -22,7 +22,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
 
   return (
     <div className="min-h-screen bg-muted/40">
-      <Header currentUser={currentUser} />
+      <Header />
 
       <main className="mx-auto max-w-4xl p-4">
         <CurrentUserProvider currentUser={currentUser}>

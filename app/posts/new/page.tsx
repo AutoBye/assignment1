@@ -14,7 +14,7 @@ export default async function NewPostPage() {
 
   return (
     <div className="min-h-screen bg-muted/40">
-      <Header currentUser={currentUser} />
+      <Header />
 
       <main className="mx-auto max-w-4xl p-4">
         <PostWriteForm />

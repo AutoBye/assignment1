@@ -272,7 +272,7 @@ export default function PostDetailClient({
           <p>작성일 {formatDate(post.createdAt)}</p>
           <p>수정일 {formatDate(post.updatedAt)}</p>
           <p>
-            좋아요 {post.likeCount}개 · 댓글 {post.commentCount}개 · 북마크{" "}
+            조회수 {post.viewCount} · 좋아요 {post.likeCount}개 · 댓글 {post.commentCount}개 · 북마크{" "}
             {post.bookmarkCount}개
           </p>
         </div>

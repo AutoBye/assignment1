@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
         id: true,
         title: true,
         content: true,
+        viewCount: true,
         createdAt: true,
         updatedAt: true,
         author: {
@@ -74,6 +75,7 @@ export async function GET(request: NextRequest) {
         id: post.id,
         title: post.title,
         content: post.content,
+        viewCount: post.viewCount,
         createdAt: post.createdAt,
         updatedAt: post.updatedAt,
         author: post.author,

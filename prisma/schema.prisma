@@ -20,6 +20,7 @@ model User {
   likes     PostLike[]
   bookmarks Bookmark[]
   sessions  Session[]
+  postViews PostView[]
 
   @@index([createdAt])
   @@map("users")
@@ -30,6 +31,7 @@ model Post {
   title     String   @db.VarChar(200)
   content   String
   authorId  String   @map("author_id") @db.Uuid
+  viewCount Int      @default(0) @map("view_count")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -37,9 +39,11 @@ model Post {
   comments  Comment[]
   likes     PostLike[]
   bookmarks Bookmark[]
+  views     PostView[]
 
   @@index([authorId])
   @@index([createdAt])
+  @@index([viewCount])
   @@map("posts")
 }
 
@@ -107,4 +111,25 @@ model Session {
   @@index([expiresAt])
   @@index([revokedAt])
   @@map("sessions")
+}
+
+model PostView {
+  id         String   @id @default(uuid()) @db.Uuid
+  postId     String   @map("post_id") @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  viewerHash String   @map("viewer_hash") @db.VarChar(64)
+  dedupeKey  String   @unique @map("dedupe_key") @db.VarChar(64)
+  viewerType String   @map("viewer_type") @db.VarChar(20)
+  ipHash     String?  @map("ip_hash") @db.VarChar(64)
+  userAgent  String?  @map("user_agent") @db.VarChar(255)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  post Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([postId])
+  @@index([userId])
+  @@index([viewerHash])
+  @@index([createdAt])
+  @@map("post_views")
 }

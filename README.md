@@ -161,3 +161,20 @@ npx prisma generate
        - components/home/RecentPostsSection.tsx
 
 ---
+
+# 더미 유저 생성 
+seed.ts
+package.json에 seed.ts 안넣어두면 못써요잉
+
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "eslint",
+        "seed": "tsx prisma/seed.ts" <<< 이거 넣어야함
+    },
+
+
+```bash
+npm run seed
+```

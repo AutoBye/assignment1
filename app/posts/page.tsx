@@ -1,7 +1,6 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PostList from "@/components/post/PostList";
-import { getCurrentUser } from "@/lib/auth";
 import { getPositivePageNumber } from "@/lib/validators";
 import { getPosts } from "@/lib/posts";
 
@@ -14,7 +13,6 @@ type PostsPageProps = {
 
 //06-09 getPosts() 다른곳으로 날림
 export default async function PostsPage({ searchParams }: PostsPageProps) {
-  const currentUser = await getCurrentUser();
   const { page, q } = await searchParams;
 
   const requestedPage = getPositivePageNumber(page);
@@ -27,7 +25,7 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
 
   return (
     <div className="min-h-screen bg-muted/40">
-      <Header currentUser={currentUser} />
+      <Header />
 
       <main className="mx-auto max-w-4xl p-4">
         <PostList
@@ -38,7 +36,6 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
           query={query}
         />
       </main>
-
       <Footer />
     </div>
   );

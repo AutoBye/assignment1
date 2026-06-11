@@ -18,6 +18,7 @@ export type PostListItem = {
 	commentCount: number;
 	likeCount: number;
 	bookmarkCount: number;
+	viewCount: number;
 };
 
 export type PopularPostItem = {
@@ -40,6 +41,7 @@ export type PostDetail = {
 	id: string;
 	title: string;
 	content: string;
+	viewCount: number;
 	createdAt: string;
 	updatedAt: string;
 	author: PostAuthor;

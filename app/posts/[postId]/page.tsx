@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PostDetailClient from "@/components/post/PostDetailClient";
@@ -5,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getCommentsByPostId } from "@/lib/comments";
 import { getPostDetail } from "@/lib/posts";
 import { CurrentUserProvider } from "@/components/providers/CurrentUserProvider";
+import { recordPostView } from "@/lib/post-views";
 
 type PostDetailPageProps = {
   params: Promise<{
@@ -15,6 +17,13 @@ type PostDetailPageProps = {
 export default async function PostDetailPage({ params }: PostDetailPageProps) {
   const currentUser = await getCurrentUser();
   const { postId } = await params;
+  const requestHeader = await headers();
+
+  await recordPostView({
+    currentUserId: currentUser?.id,
+    headers: requestHeader,
+    postId,
+  });
 
   const [post, commentsResult] = await Promise.all([
     getPostDetail(postId, currentUser?.id),
@@ -23,7 +32,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
 
   return (
     <div className="min-h-screen bg-muted/40">
-      <Header currentUser={currentUser} />
+      <Header />
       <main className="mx-auto max-w-4xl p-4">
         <CurrentUserProvider currentUser={currentUser}>
           <PostDetailClient

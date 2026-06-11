@@ -147,6 +147,7 @@ export async function getPosts(page: number, query = "") {
       id: true,
       title: true,
       content: true,
+      viewCount: true,
       createdAt: true,
       author: {
         select: {
@@ -169,6 +170,7 @@ export async function getPosts(page: number, query = "") {
       id: post.id,
       title: post.title,
       content: post.content,
+      viewCount: post.viewCount,
       createdAt: formatDate(post.createdAt),
       author: {
         name: post.author.name,
@@ -206,6 +208,7 @@ export async function getPostDetail(
       id: true,
       title: true,
       content: true,
+      viewCount: true,
       createdAt: true,
       updatedAt: true,
       author: {
@@ -251,6 +254,7 @@ export async function getPostDetail(
     id: post.id,
     title: post.title,
     content: post.content,
+    viewCount: post.viewCount,
     createdAt: post.createdAt.toISOString(),
     updatedAt: post.updatedAt.toISOString(),
     author: post.author,

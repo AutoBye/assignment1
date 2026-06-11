@@ -97,7 +97,7 @@ export default function PostList({
                                         </p>
 
                                         <p>
-                                            좋아요 {post.likeCount}개 · 댓글 {post.commentCount}개 ·
+                                            조회수 {post.viewCount}개 · 좋아요 {post.likeCount}개 · 댓글 {post.commentCount}개 ·
                                             북마크 {post.bookmarkCount}개
                                         </p>
                                     </div>
