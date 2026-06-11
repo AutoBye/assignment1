@@ -29,6 +29,12 @@ export default function Header() {
             <span className="px-2 text-sm text-muted-foreground">확인 중</span>
           ) : currentUser ? (
             <>
+              <Link
+                href="/me"
+                className={buttonVariants({ variant: "ghost", size: "sm" })}
+              >
+                마이페이지
+              </Link>
               <span className="px-2 text-sm text-muted-foreground">
                 {currentUser.name}님
               </span>
