@@ -21,3 +21,26 @@ export function jsonSuccess<T>(data: T, status = 200) {
 		status,
 	});
 }
+
+export function jsonMessage(message: string, status = 200) {
+	return NextResponse.json(
+		{
+			message,
+		},
+		{
+			status,
+		},
+	);
+}
+
+export function jsonUser<TUser>(message: string, user: TUser, status = 200) {
+	return NextResponse.json(
+		{
+			message,
+			user,
+		},
+		{
+			status,
+		},
+	);
+}

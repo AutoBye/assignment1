@@ -1,5 +1,6 @@
 // 서 버 전 용 라 이 브 러 리
 // 클라이언트 훅 들고오지마라
+// 현재 로그인 사용자 가져오기
 import "server-only";
 import { getSession } from "@/lib/session";
 
