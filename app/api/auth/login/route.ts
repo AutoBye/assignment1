@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/password";
-import { createSessionToken, setSessionCookie } from "@/lib/session";
+import { createSession, setSessionCookie } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -61,11 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 토큰 생성
-    const token = createSessionToken({
-      userId: user.id,
-      email: user.email,
-      name: user.name,
-    });
+    const token = await createSession(user.id);
 
     const response = NextResponse.json({
       message: "로그인되었습니다.",
