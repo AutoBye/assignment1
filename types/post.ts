@@ -84,3 +84,12 @@ export type BookmarkButtonResponse = ApiMessageResponse & {
 	bookmarked?: boolean;
 	bookmarkCount?: number;
 }
+
+export type BookmarkedPostItem = PostListItem & {
+	bookmarkedAt: string;
+};
+
+export type BookmarkedPostsResponse = {
+	posts?: BookmarkedPostItem[];
+	message?: string;
+};

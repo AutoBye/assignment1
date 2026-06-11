@@ -4,6 +4,8 @@ import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Button } from "@/components/ui/button";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import type { BookmarkButtonResponse } from "@/types/post";
+import {useQueryClient} from "@tanstack/react-query";
+import {meBookmarksQueryKey} from "@/lib/queries/bookmark-query";
 
 type BookmarkButtonProps = {
   postId: string;
@@ -18,6 +20,7 @@ export default function BookmarkButton({
   bookmarkCount,
   onBookmarkChange,
 }: BookmarkButtonProps) {
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const { isLoggedIn } = useCurrentUser();
   const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
@@ -51,6 +54,10 @@ export default function BookmarkButton({
       }
 
       onBookmarkChange?.(data.bookmarkCount, data.bookmarked);
+
+      await queryClient.invalidateQueries({
+        queryKey: meBookmarksQueryKey,
+      });
     } catch {
       openErrorModal("북마크 요청 중 오류가 발생했습니다.");
     } finally {

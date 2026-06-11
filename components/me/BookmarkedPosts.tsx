@@ -1,7 +1,36 @@
+"use client";
+
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BookmarkedPostsResponse } from "@/types/post";
+import { useQuery } from "@tanstack/react-query";
+import {formatDate} from "@/lib/date";
+import {meBookmarksQueryKey} from "@/lib/queries/bookmark-query";
+
+async function fetchBookmarkedPosts() {
+  const response = await fetch(`/api/me/bookmarks`, {
+    method: "GET",
+  });
+
+  const data = (await response.json()) as BookmarkedPostsResponse;
+
+  if (!response.ok) {
+    throw new Error(data.message ?? "북마크 목록을 가져오지 못했습니다.");
+  }
+
+  return {
+    posts: data.posts ?? [],
+  };
+}
 
 export default function BookmarkedPosts() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: meBookmarksQueryKey,
+    queryFn: fetchBookmarkedPosts,
+  });
+
+  const posts = data?.posts ?? [];
+
   return (
     <Card>
       <CardHeader>
@@ -9,16 +38,57 @@ export default function BookmarkedPosts() {
       </CardHeader>
 
       <CardContent>
-        <div className="space-y-2 text-sm text-muted-foreground">
-          <p>아직 연결된 북마크 목록이 없습니다.</p>
+        {isLoading && (
+          <p className="text-sm text-muted-foreground">불러오는 중...</p>
+        )}
 
-          <Link
-            href="/posts"
-            className="text-primary underline-offset-4 hover:underline"
-          >
-            게시글 보러가기
-          </Link>
-        </div>
+        {isError && (
+          <p className="text-sm text-destructive">
+            북마크 목록을 가져오지 못했습니다.
+          </p>
+        )}
+
+        {!isLoading && !isError && posts.length === 0 && (
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>북마크한 게시글이 없습니다.</p>
+
+            <Link
+              href="/posts"
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              게시글 보러가기
+            </Link>
+          </div>
+        )}
+
+        {!isLoading && !isError && posts.length > 0 && (
+          <div className="space-y-3">
+            {posts.map((post) => (
+              <Link
+                key={post.id}
+                href={`/posts/${post.id}`}
+                className="block rounded-md border p-3 transition-colors hover:bg-muted/50"
+              >
+                <div className="space-y-1">
+                  <h3 className="font-medium leading-none">{post.title}</h3>
+
+                  <p className="line-clamp-2 text-sm text-muted-foreground">
+                    {post.content}
+                  </p>
+
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                    <span>{post.author.name}</span>
+                    <span>조회 {post.viewCount}</span>
+                    <span>좋아요 {post.likeCount}</span>
+                    <span>댓글 {post.commentCount}</span>
+                    <span>북마크 {post.bookmarkCount}</span>
+                    <span>저장일 {formatDate(post.bookmarkedAt)}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
