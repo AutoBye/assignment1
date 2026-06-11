@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import {jsonUser} from "@/lib/api-response";
 
 export const runtime = "nodejs";
 
@@ -7,19 +7,10 @@ export const runtime = "nodejs";
 export async function GET() {
   const user = await getCurrentUser();
 
-  //로그인 상태면 401, 아니면 null
+  //로그인 상태면 200 OK / 아니면 401 Unauthorized
   if (!user) {
-    return NextResponse.json(
-      {
-        user: null,
-      },
-      {
-        status: 401,
-      },
-    );
+    return jsonUser("로그인 상태 아님!!", null, 401);
   }
 
-  return NextResponse.json({
-    user,
-  });
+  return jsonUser("유저 정보 반환", user, 200);
 }

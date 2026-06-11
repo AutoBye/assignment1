@@ -6,6 +6,7 @@ import ErrorModal from "@/components/common/ErrorModal";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import ToastViewport from "@/components/common/ToastViewport";
 import QueryProvider from "@/components/providers/QueryProvider";
+import RefreshOnPageShow from "@/components/common/RefreshOnPageShow";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -43,6 +44,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <QueryProvider>
+          <RefreshOnPageShow />
           {children}
           <ErrorModal />
           <ConfirmModal />

@@ -1,10 +1,9 @@
 // 입력 검증 / 유저 조회 / 비밀번호 해쉬 검증 / 세션 생성 / 쿠키 설정/ 응답 반환
 import { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { verifyPassword } from "@/lib/password";
 import { createSession, setSessionCookie } from "@/lib/session";
 import { validateLoginInput } from "@/lib/auth-validation";
-import { jsonError, jsonSuccess } from "@/lib/api-response";
+import {jsonError, jsonUser} from "@/lib/api-response";
+import {loginWithEmailPassword} from "@/lib/auth-service";
 
 export const runtime = "nodejs";
 
@@ -12,44 +11,27 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // 입력 검증
     const validation = validateLoginInput(body);
 
     if (!validation.ok) {
       return jsonError(validation.message, validation.status);
     }
 
-    const { email, password } = validation.data;
+    // 조회 / 검증
+    const result = await loginWithEmailPassword(validation.data);
 
-    const user = await prisma.user.findUnique({
-      where: {
-        email,
-      },
-    });
-
-    if (!user) {
-      return jsonError("이메일 또는 비밀번호가 올바르지 않습니다.", 401);
-    }
-
-    const isValidPassword = await verifyPassword(password, user.passwordHash);
-
-    if (!isValidPassword) {
-      return jsonError("이메일 또는 비밀번호가 올바르지 않습니다.", 401);
+    if (!result.ok) {
+      return jsonError(result.message, result.status);
     }
 
     // 토큰 생성
-    const token = await createSession(user.id);
+    const token = await createSession(result.user.id);
 
-    const response = jsonSuccess({
-      message: "로그인되었습니다.",
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        createdAt: user.createdAt,
-      },
-    });
+    // 응답
+    const response = jsonUser("로그인되었습니다.", result.user);
 
-    // 쿠키 저장
+    // 세션 쿠키 저장
     setSessionCookie(response, token);
 
     return response;
