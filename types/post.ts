@@ -49,6 +49,7 @@ export type PostDetail = {
 	likeCount: number;
 	bookmarkCount: number;
 	likedByCurrentUser: boolean;
+	bookmarkedByCurrentUser: boolean;
 };
 
 export type CreatePostResponse = ApiMessageResponse & {
@@ -78,3 +79,8 @@ export type PostsResponse = ApiMessageResponse & {
 	posts?: PostListItem[];
 	pagination?: PostPaginationResponse;
 };
+
+export type BookmarkButtonResponse = ApiMessageResponse & {
+	bookmarked?: boolean;
+	bookmarkCount?: number;
+}

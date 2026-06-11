@@ -232,22 +232,39 @@ export async function getPostDetail(
     return null;
   }
 
+  // 좋아요, 북마크만 처리 하면 됌 얘네는 중복 불가능
   let likedByCurrentUser = false;
+  let bookmarkedByCurrentUser = false;
 
   if (currentUserId) {
-    const existingLike = await prisma.postLike.findUnique({
-      where: {
-        postId_userId: {
-          postId,
-          userId: currentUserId,
+    const [existingLike, existingBookmark] = await Promise.all([
+      prisma.postLike.findUnique({
+        where: {
+          postId_userId: {
+            postId,
+            userId: currentUserId,
+          },
         },
-      },
-      select: {
-        postId: true,
-      },
-    });
+        select: {
+          postId: true,
+        },
+      }),
+
+      prisma.bookmark.findUnique({
+        where: {
+          postId_userId: {
+            postId,
+            userId: currentUserId,
+          },
+        },
+        select: {
+          postId: true,
+        },
+      }),
+    ]);
 
     likedByCurrentUser = existingLike !== null;
+    bookmarkedByCurrentUser = existingBookmark !== null;
   }
 
   return {
@@ -262,5 +279,6 @@ export async function getPostDetail(
     likeCount: post._count.likes,
     bookmarkCount: post._count.bookmarks,
     likedByCurrentUser,
+    bookmarkedByCurrentUser,
   };
 }

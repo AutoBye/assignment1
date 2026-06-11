@@ -22,6 +22,7 @@ import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { useConfirmModalStore } from "@/lib/stores/confirm-modal-store";
 import { useToastStore } from "@/lib/stores/toast-store";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
+import BookmarkButton from "@/components/post/BookmarkButton";
 // 5번 과제는 components/post/PostDetailClient.tsx에서 부모 state가 자식 콜백으로 바뀌는 흐름
 // > 자식 컴포넌트가 직접 부모 state를 바꾸는 게 아니라, 부모가 넘겨준 함수를 호출해서 부모 state를 바꾼다.
 // React 에서는 데이터 흐름을 보통 위에서 아래로 둠
@@ -189,6 +190,23 @@ export default function PostDetailClient({
     });
   }
 
+  function handleBookmarkChange(bookmarkCount: number, bookmarked: boolean) {
+    setDetailState((currentState) => {
+      if (!currentState.post) {
+        return currentState;
+      }
+
+      return {
+        ...currentState,
+        post: {
+          ...currentState.post,
+          bookmarkCount,
+          bookmarkedByCurrentUser: bookmarked,
+        },
+      };
+    });
+  }
+
   if (message) {
     return (
       <Card>
@@ -272,8 +290,8 @@ export default function PostDetailClient({
           <p>작성일 {formatDate(post.createdAt)}</p>
           <p>수정일 {formatDate(post.updatedAt)}</p>
           <p>
-            조회수 {post.viewCount} · 좋아요 {post.likeCount}개 · 댓글 {post.commentCount}개 · 북마크{" "}
-            {post.bookmarkCount}개
+            조회수 {post.viewCount} · 좋아요 {post.likeCount}개 · 댓글{" "}
+            {post.commentCount}개 · 북마크 {post.bookmarkCount}개
           </p>
         </div>
 
@@ -296,6 +314,13 @@ export default function PostDetailClient({
             likeCount={post.likeCount}
             isOwnPost={isAuthor}
             onLikeChange={handleLikeChange}
+          />
+
+          <BookmarkButton
+            postId={post.id}
+            bookmarked={post.bookmarkedByCurrentUser}
+            bookmarkCount={post.bookmarkCount}
+            onBookmarkChange={handleBookmarkChange}
           />
 
           {isAuthor && (
