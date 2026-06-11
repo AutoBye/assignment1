@@ -1,4 +1,5 @@
 // 얘도 서버 라이브러리다...
+// 세션 생성, 조회, 폐기, 쿠키 처리
 import "server-only";
 
 import crypto from "crypto";

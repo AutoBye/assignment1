@@ -1,6 +1,6 @@
+// 비밀번호 해쉬/검증
 import bcrypt from "bcryptjs";
 const SALT_ROUNDS = 12;
-
 
 /** 비밀번호 해쉬
  * @param password 비밀번호

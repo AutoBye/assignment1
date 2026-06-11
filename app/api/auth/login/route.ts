@@ -1,69 +1,44 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/password";
 import { createSession, setSessionCookie } from "@/lib/session";
+import { validateLoginInput } from "@/lib/auth-validation";
+import { jsonError, jsonSuccess } from "@/lib/api-response";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as {
-      email?: string;
-      password?: string;
-    };
+    const body = await request.json();
 
-    const email = body.email?.trim().toLowerCase() ?? "";
-    const password = body.password ?? "";
+    const validation = validateLoginInput(body);
 
-    //빈 값 검사
-    if (!email || !password) {
-      return NextResponse.json(
-        {
-          message: "이메일과 비밀번호를 입력해주세요.",
-        },
-        {
-          status: 400,
-        },
-      );
+    if (!validation.ok) {
+      return jsonError(validation.message, validation.status);
     }
 
-    // 이메일로 유저 찾기
+    const { email, password } = validation.data;
+
     const user = await prisma.user.findUnique({
       where: {
         email,
       },
     });
 
-    // 유저 못찾으면
     if (!user) {
-      return NextResponse.json(
-        {
-          message: "이메일 또는 비밀번호가 올바르지 않습니다.",
-        },
-        {
-          status: 401,
-        },
-      );
+      return jsonError("이메일 또는 비밀번호가 올바르지 않습니다.", 401);
     }
 
-    // 비밀번호 검증
     const isValidPassword = await verifyPassword(password, user.passwordHash);
 
     if (!isValidPassword) {
-      return NextResponse.json(
-        {
-          message: "이메일 또는 비밀번호가 올바르지 않습니다.",
-        },
-        {
-          status: 401,
-        },
-      );
+      return jsonError("이메일 또는 비밀번호가 올바르지 않습니다.", 401);
     }
 
     // 토큰 생성
     const token = await createSession(user.id);
 
-    const response = NextResponse.json({
+    const response = jsonSuccess({
       message: "로그인되었습니다.",
       user: {
         id: user.id,
@@ -80,13 +55,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error(error);
 
-    return NextResponse.json(
-      {
-        message: "로그인 중 오류가 발생했습니다.",
-      },
-      {
-        status: 500,
-      },
-    );
+    return jsonError("로그인 중 오류가 발생했습니다.", 500);
   }
 }
