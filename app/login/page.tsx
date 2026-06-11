@@ -15,6 +15,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import type { CurrentUser } from "@/types/auth";
+import { useQueryClient } from "@tanstack/react-query";
+import { currentUserQueryKey } from "@/lib/use-current-user";
+
+type LoginResponse = {
+  message: string;
+  user: CurrentUser;
+};
 
 async function getLoginErrorMessage(response: Response) {
   try {
@@ -27,6 +35,7 @@ async function getLoginErrorMessage(response: Response) {
 
 export default function LoginPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // 처리상태용
   const [message, setMessage] = useState("");
@@ -58,8 +67,7 @@ export default function LoginPage() {
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
 
-    if (isLoading)
-      return;
+    if (isLoading) return;
 
     const normalizedEmail = email.trim().toLowerCase();
     const trimmedPassword = password.trim();
@@ -91,14 +99,19 @@ export default function LoginPage() {
         return;
       }
 
+      const data = (await response.json()) as LoginResponse;
+
       if (rememberEmail) {
         saveRememberedEmail(normalizedEmail);
       } else {
         removeRememberedEmail();
       }
 
+      queryClient.setQueryData(currentUserQueryKey, {
+        user: data.user,
+      });
+
       router.replace("/");
-      router.refresh();
     } catch {
       setMessage("로그인 요청 중 오류가 발생했습니다.");
     } finally {

@@ -3,9 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useQueryClient } from "@tanstack/react-query";
+import { currentUserQueryKey } from "@/lib/use-current-user";
 
 export default function LogoutButton() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleLogout() {
@@ -21,8 +25,11 @@ export default function LogoutButton() {
         return;
       }
 
+      queryClient.removeQueries({
+        queryKey: currentUserQueryKey,
+      });
+
       router.replace("/");
-      router.refresh();
     } catch {
       alert("로그아웃 요청 중 오류가 발생했습니다.");
     } finally {
@@ -31,16 +38,16 @@ export default function LogoutButton() {
   }
 
   return (
-	  <div className="flex flex-wrap items-center gap-2 md:flex-row">
-		  <Button
-			  type="button"
-			  variant="outline"
-			  size="sm"
-			  onClick={handleLogout}
-			  disabled={isLoading}
-		  >
-			  {isLoading ? "로그아웃 중..." : "로그아웃"}
-		  </Button>
-	  </div>
+    <div className="flex flex-wrap items-center gap-2 md:flex-row">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={handleLogout}
+        disabled={isLoading}
+      >
+        {isLoading ? "로그아웃 중..." : "로그아웃"}
+      </Button>
+    </div>
   );
 }

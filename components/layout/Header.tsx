@@ -1,24 +1,20 @@
 // 상단 메뉴
+"use client";
+
 import Link from "next/link";
 import LogoutButton from "@/components/auth/LogoutButton";
 import { buttonVariants } from "@/components/ui/button";
+import { useCurrentUserQuery } from "@/lib/use-current-user";
 
-type HeaderUser = {
-  id: string;
-  email: string;
-  name: string;
-};
+export default function Header() {
+  const { data, isLoading } = useCurrentUserQuery();
+  const currentUser = data?.user ?? null;
 
-type HeaderProps = {
-  currentUser: HeaderUser | null;
-};
-
-export default function Header({ currentUser }: HeaderProps) {
   return (
     <header className="border-b bg-background">
       <div className="mx-auto flex max-w-4xl items-center justify-between p-4">
         <Link href="/" className="text-xl font-bold tracking-tight">
-          과제용 웹 페이지
+          과제 페이지
         </Link>
 
         <nav className="flex items-center gap-2">
@@ -29,7 +25,9 @@ export default function Header({ currentUser }: HeaderProps) {
             게시글
           </Link>
 
-          {currentUser ? (
+          {isLoading ? (
+            <span className="px-2 text-sm text-muted-foreground">확인 중</span>
+          ) : currentUser ? (
             <>
               <span className="px-2 text-sm text-muted-foreground">
                 {currentUser.name}님
