@@ -6,9 +6,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { CommentPaginationResponse } from "@/types/api";
 import type { CommentItem } from "@/types/comment";
-import {CommentPagination} from "@/components/comments/CommentPagination";
-import {CommentForm} from "@/components/comments/CommentForm";
-import {CommentItemCard} from "@/components/comments/CommentItemCard";
+import { CommentPagination } from "@/components/comments/CommentPagination";
+import { CommentForm } from "@/components/comments/CommentForm";
+import { CommentItemCard } from "@/components/comments/CommentItemCard";
 
 type CommentSectionProps = {
   postId: string;

@@ -42,8 +42,8 @@ export async function loginWithEmailPassword(input: {
   }
 
   const isValidPassword = await verifyPassword(
-      input.password,
-      user.passwordHash,
+    input.password,
+    user.passwordHash,
   );
 
   if (!isValidPassword) {

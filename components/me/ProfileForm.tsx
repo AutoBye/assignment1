@@ -11,7 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import { useToastStore } from "@/lib/stores/toast-store";
-import {currentUserQueryKey, useCurrentUserQuery} from "@/lib/hooks/use-current-user-query";
+import {
+  currentUserQueryKey,
+  useCurrentUserQuery,
+} from "@/lib/hooks/use-current-user-query";
 
 type ProfileFormProps = {
   initialUser: CurrentUser;

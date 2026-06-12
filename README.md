@@ -1,9 +1,11 @@
 ## 시작
+
 ```bash
 npm run dev
 ```
 
 # DB 설계
+
 ## 테이블 구성
 
      User
@@ -11,27 +13,28 @@ npm run dev
     - 로그인 계정 (비밀번호 md5 해쉬처리?)
     - 계정 생성 날짜
     - 게시글, 댓글, 좋아요, 북마크의 주체
-    
+
     Post
     - 게시글
     - 작성 시간
     - 작성자 User와 연결
-    
+
     Comment
     - 댓글
     - 작성 시간
     - 게시글과 작성자 User에 연결
     - 대댓글 구조까지 고려 가능
-    
+
     PostLike
     - 게시글 좋아요
     - 한 사용자가 한 게시글에 한 번만 좋아요 가능
-    
+
     Bookmark
     - 게시글 북마크
     - 한 사용자가 한 게시글을 한 번만 북마크 가능
 
 prisma/schema.prisma에 코드 넣고 실행
+
 ```bash
 npx prisma format
 npx prisma migrate dev --name init
@@ -105,7 +108,7 @@ npx prisma generate
     │
     ├─ services/
     │  ├─ auth.service.ts
-    │  ├─ post.service.ts
+    │  ├─ post-write.service.ts
     │  ├─ comment.service.ts
     │  ├─ like.service.ts
     │  └─ bookmark.service.ts
@@ -162,7 +165,8 @@ npx prisma generate
 
 ---
 
-# 더미 유저 생성 
+# 더미 유저 생성
+
 seed.ts
 package.json에 seed.ts 안넣어두면 못써요잉
 
@@ -173,7 +177,6 @@ package.json에 seed.ts 안넣어두면 못써요잉
         "lint": "eslint",
         "seed": "tsx prisma/seed.ts" <<< 이거 넣어야함
     },
-
 
 ```bash
 npm run seed

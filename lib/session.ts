@@ -126,14 +126,16 @@ export async function getSession() {
   }
 
   if (session.expiresAt <= new Date()) {
-    await prisma.session.update({
-      where: {
-        id: session.id,
-      },
-      data: {
-        revokedAt: new Date(),
-      },
-    }).catch(() => undefined);
+    await prisma.session
+      .update({
+        where: {
+          id: session.id,
+        },
+        data: {
+          revokedAt: new Date(),
+        },
+      })
+      .catch(() => undefined);
 
     return null;
   }

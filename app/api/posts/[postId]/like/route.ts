@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { jsonSuccess } from "@/lib/api-response";
 import { requireCurrentUser } from "@/lib/server/auth-guard";
 import { toRouteErrorResponse } from "@/lib/server/route-error";
-import { togglePostLike } from "@/lib/services/post.service";
+import { togglePostLike } from "@/lib/services/post-write.service";
 
 export const runtime = "nodejs";
 

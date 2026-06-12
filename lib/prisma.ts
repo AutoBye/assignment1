@@ -9,24 +9,24 @@ import { PrismaPg } from "@prisma/adapter-pg";
 
 //.env에 있는 DB 접속 주소 사용
 const adapter = new PrismaPg({
-	connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL,
 });
 
 // Node.js 서버 전체에서 공유되는 전역 객체. 여기에 prisma 저장하려고 타입 지정
 const globalForPrisma = globalThis as unknown as {
-	prisma?: PrismaClient;
+  prisma?: PrismaClient;
 };
 
 //이미 만들어둔 PrismaClient가 있으면 그걸 사용
 //없으면 새로 생성
 export const prisma =
-	globalForPrisma.prisma ??
-	new PrismaClient({
-		adapter,
-		log: ["query", "error", "warn"],
-	});
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    adapter,
+    log: ["query", "error", "warn"],
+  });
 
 //Dev 환경에서만 전역에 저장
 if (process.env.NODE_ENV !== "production") {
-	globalForPrisma.prisma = prisma;
+  globalForPrisma.prisma = prisma;
 }

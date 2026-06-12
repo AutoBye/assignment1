@@ -73,7 +73,7 @@ export async function recordPostView({
   // 작성자 본인 조회는 조회수 제외
   if (currentUserId && post.authorId === currentUserId) {
     return {
-      recoded: false,
+      recorded: false,
       reason: "author_view",
     };
   }
@@ -92,42 +92,42 @@ export async function recordPostView({
   const dedupeKey = hashValue(`${postId}:${viewerHash}:${viewDataBucket}`);
 
   try {
-	  await prisma.$transaction([
-		  prisma.postView.create({
-			  data: {
-				  postId,
-				  userId: currentUserId,
-				  viewerHash,
-				  dedupeKey,
-				  viewerType,
-				  ipHash,
-				  userAgent: userAgent.slice(0, 255),
-			  },
-		  }),
-		  prisma.post.update({
-			  where: {
-				  id: postId,
-			  },
-			  data: {
-				  viewCount: {
-					  increment: 1,
-				  },
-			  },
-		  }),
-	  ]);
+    await prisma.$transaction([
+      prisma.postView.create({
+        data: {
+          postId,
+          userId: currentUserId,
+          viewerHash,
+          dedupeKey,
+          viewerType,
+          ipHash,
+          userAgent: userAgent.slice(0, 255),
+        },
+      }),
+      prisma.post.update({
+        where: {
+          id: postId,
+        },
+        data: {
+          viewCount: {
+            increment: 1,
+          },
+        },
+      }),
+    ]);
 
-	  return {
-		  recorded: true,
-		  reason: "recorded",
-	  };
+    return {
+      recorded: true,
+      reason: "recorded",
+    };
   } catch (error) {
-	  if (isUniqueConstraintError(error)) {
-		  return {
-			  recorded: false,
-			  reason: "duplicated_view",
-		  };
-	  }
+    if (isUniqueConstraintError(error)) {
+      return {
+        recorded: false,
+        reason: "duplicated_view",
+      };
+    }
 
-	  throw error;
+    throw error;
   }
 }

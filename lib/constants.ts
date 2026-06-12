@@ -1,6 +1,6 @@
 // 게시글 길이 관련
 export const POST_TITLE_MIN_LENGTH = 2;
-export const POST_TITLE_MAX_LENGTH = 20;
+export const POST_TITLE_MAX_LENGTH = 200;
 export const POST_CONTENT_MIN_LENGTH = 2;
 
 // 댓글 길이 관련

@@ -1,18 +1,18 @@
 export type ApiMessageResponse = {
-	message?: string;
+  message?: string;
 };
 
 export type PaginationResponse = {
-	currentPage: number;
-	totalPages: number;
+  currentPage: number;
+  totalPages: number;
 };
 
 export type PostPaginationResponse = PaginationResponse & {
-	totalPostCount: number;
-	postsPerPage: number;
+  totalPostCount: number;
+  postsPerPage: number;
 };
 
 export type CommentPaginationResponse = PaginationResponse & {
-	totalRootCommentCount: number;
-	commentsPerPage: number;
+  totalRootCommentCount: number;
+  commentsPerPage: number;
 };

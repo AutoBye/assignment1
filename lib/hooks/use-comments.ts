@@ -6,22 +6,19 @@ import {
   COMMENT_CONTENT_MIN_LENGTH,
   COMMENTS_PER_PAGE,
 } from "@/lib/constants";
-
+import { getErrorMessage } from "@/lib/api/client";
+import { queryKeys } from "@/lib/query-keys";
 import {
   createCommentRequest,
+  deleteCommentRequest,
   fetchComments,
   updateCommentRequest,
-  deleteCommentRequest,
 } from "@/lib/queries/comments-query";
-
+import { useConfirmModalStore } from "@/lib/stores/confirm-modal-store";
+import { useErrorModalStore } from "@/lib/stores/error-modal-store";
+import { useToastStore } from "@/lib/stores/toast-store";
 import type { CommentPaginationResponse } from "@/types/api";
 import type { CommentItem } from "@/types/comment";
-
-import { useErrorModalStore } from "@/lib/stores/error-modal-store";
-import { useConfirmModalStore } from "@/lib/stores/confirm-modal-store";
-import { useToastStore } from "@/lib/stores/toast-store";
-import {queryKeys} from "@/lib/query-keys";
-import {getErrorMessage} from "@/lib/api/client";
 
 type UseCommentsParams = {
   postId: string;
@@ -94,14 +91,11 @@ function getDeleteCount(comments: CommentItem[], commentId: string) {
     const matchedReply = comment.replies.some(
       (reply) => reply.id === commentId,
     );
+
     return matchedReply ? count + 1 : count;
   }, 0);
 }
 
-// - Hook 호출은 조건문 밖
-// - UI 조건 분기는 JSX 안
-// - 이벤트 함수 안에서 useState, useEffect 호출 금지
-// - map 안에서 Hook 호출 금지
 export function useComments({
   postId,
   initialComments = [],
@@ -110,7 +104,6 @@ export function useComments({
 }: UseCommentsParams) {
   const queryClient = useQueryClient();
 
-  //얘도 훅이다? 조건문 안이 아닌 state들과 같이 호출해
   const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
   const openConfirmModal = useConfirmModalStore(
     (state) => state.openConfirmModal,
@@ -156,7 +149,7 @@ export function useComments({
     mutationFn: createCommentRequest,
     onError: (error) => {
       openErrorModal(
-          getErrorMessage(error, "댓글 작성 요청 중 오류가 발생했습니다."),
+        getErrorMessage(error, "댓글 작성 요청 중 오류가 발생했습니다."),
       );
     },
   });
@@ -165,7 +158,7 @@ export function useComments({
     mutationFn: createCommentRequest,
     onError: (error) => {
       openErrorModal(
-          getErrorMessage(error, "답글 작성 요청 중 오류가 발생했습니다."),
+        getErrorMessage(error, "답글 작성 요청 중 오류가 발생했습니다."),
       );
     },
   });
@@ -174,7 +167,7 @@ export function useComments({
     mutationFn: updateCommentRequest,
     onError: (error) => {
       openErrorModal(
-          getErrorMessage(error, "댓글 수정 요청 중 오류가 발생했습니다."),
+        getErrorMessage(error, "댓글 수정 요청 중 오류가 발생했습니다."),
       );
     },
   });
@@ -183,31 +176,43 @@ export function useComments({
     mutationFn: deleteCommentRequest,
     onError: (error) => {
       openErrorModal(
-          getErrorMessage(error, "댓글 삭제 요청 중 오류가 발생했습니다."),
+        getErrorMessage(error, "댓글 삭제 요청 중 오류가 발생했습니다."),
       );
     },
   });
 
-  const setContent = (content: string) => {
+  function setContent(content: string) {
     setFormState((currentState) => ({
       ...currentState,
       content,
     }));
-  };
+  }
 
-  const setEditingContent = (editingContent: string) => {
+  function setEditingContent(editingContent: string) {
     setFormState((currentState) => ({
       ...currentState,
       editingContent,
     }));
-  };
+  }
 
-  const setReplyContent = (replyContent: string) => {
+  function setReplyContent(replyContent: string) {
     setFormState((currentState) => ({
       ...currentState,
       replyContent,
     }));
-  };
+  }
+
+  function clearMessage() {
+    setStatusState({
+      message: "",
+    });
+  }
+
+  function setMessage(message: string) {
+    setStatusState({
+      message,
+    });
+  }
 
   function loadComments(page: number) {
     setPaginationState({
@@ -222,10 +227,7 @@ export function useComments({
   }
 
   async function createComment() {
-    setStatusState((currentState) => ({
-      ...currentState,
-      message: "",
-    }));
+    clearMessage();
 
     const result = validateCommentContent(
       formState.content,
@@ -233,20 +235,11 @@ export function useComments({
     );
 
     if (result.message) {
-      setStatusState((currentState) => ({
-        ...currentState,
-        message: result.message,
-      }));
+      setMessage(result.message);
       return;
     }
 
-    setStatusState((currentState) => ({
-      ...currentState,
-      isSubmitting: true,
-    }));
-
     try {
-
       await createCommentMutation.mutateAsync({
         postId,
         content: result.content,
@@ -255,9 +248,9 @@ export function useComments({
       setContent("");
       onCommentCountChange?.(1);
 
-      setPaginationState(({
+      setPaginationState({
         currentPage: 1,
-      }));
+      });
 
       await invalidateComments();
 
@@ -266,21 +259,12 @@ export function useComments({
         message: "댓글이 작성되었습니다.",
       });
     } catch {
-      //에러 모달은 mutation onError 에서 처리?
-      //openErrorModal("댓글 작성 요청 중 오류가 발생했습니다.");
-    } finally {
-      // setStatusState((currentState) => ({
-      //   ...currentState,
-      //   isSubmitting: false,
-      // }));
+      // mutation onError에서 처리한다.
     }
   }
 
   async function createReply(parentId: string) {
-    setStatusState((currentState) => ({
-      ...currentState,
-      message: "",
-    }));
+    clearMessage();
 
     const result = validateCommentContent(
       formState.replyContent,
@@ -288,10 +272,7 @@ export function useComments({
     );
 
     if (result.message) {
-      setStatusState((currentState) => ({
-        ...currentState,
-        message: result.message,
-      }));
+      setMessage(result.message);
       return;
     }
 
@@ -326,7 +307,7 @@ export function useComments({
         message: "답글이 작성되었습니다.",
       });
     } catch {
-      //openErrorModal("답글 작성 요청 중 오류가 발생했습니다.");
+      // mutation onError에서 처리한다.
     } finally {
       setTargetState((currentState) => ({
         ...currentState,
@@ -336,10 +317,7 @@ export function useComments({
   }
 
   function startEditComment(comment: CommentItem) {
-    setStatusState((currentState) => ({
-      ...currentState,
-      message: "",
-    }));
+    clearMessage();
 
     setTargetState((currentState) => ({
       ...currentState,
@@ -355,10 +333,7 @@ export function useComments({
   }
 
   function cancelEditComment() {
-    setStatusState((currentState) => ({
-      ...currentState,
-      message: "",
-    }));
+    clearMessage();
 
     setTargetState((currentState) => ({
       ...currentState,
@@ -372,10 +347,7 @@ export function useComments({
   }
 
   function startReply(commentId: string) {
-    setStatusState((currentState) => ({
-      ...currentState,
-      message: "",
-    }));
+    clearMessage();
 
     setTargetState((currentState) => ({
       ...currentState,
@@ -391,10 +363,7 @@ export function useComments({
   }
 
   function cancelReply() {
-    setStatusState((currentState) => ({
-      ...currentState,
-      message: "",
-    }));
+    clearMessage();
 
     setTargetState((currentState) => ({
       ...currentState,
@@ -408,10 +377,7 @@ export function useComments({
   }
 
   async function updateComment(commentId: string) {
-    setStatusState((currentState) => ({
-      ...currentState,
-      message: "",
-    }));
+    clearMessage();
 
     const result = validateCommentContent(
       formState.editingContent,
@@ -419,10 +385,7 @@ export function useComments({
     );
 
     if (result.message) {
-      setStatusState((currentState) => ({
-        ...currentState,
-        message: result.message,
-      }));
+      setMessage(result.message);
       return;
     }
 
@@ -432,7 +395,6 @@ export function useComments({
     }));
 
     try {
-
       await updateCommentMutation.mutateAsync({
         commentId,
         content: result.content,
@@ -455,7 +417,7 @@ export function useComments({
         message: "댓글이 수정되었습니다.",
       });
     } catch {
-      //openErrorModal("댓글 수정 요청 중 오류가 발생했습니다.");
+      // mutation onError에서 처리한다.
     } finally {
       setTargetState((currentState) => ({
         ...currentState,
@@ -476,10 +438,7 @@ export function useComments({
       return;
     }
 
-    setStatusState((currentState) => ({
-      ...currentState,
-      message: "",
-    }));
+    clearMessage();
 
     setTargetState((currentState) => ({
       ...currentState,
@@ -500,7 +459,7 @@ export function useComments({
         message: "댓글이 삭제되었습니다.",
       });
     } catch {
-      //openErrorModal("댓글 삭제 요청 중 오류가 발생했습니다.");
+      // mutation onError에서 처리한다.
     } finally {
       setTargetState((currentState) => ({
         ...currentState,

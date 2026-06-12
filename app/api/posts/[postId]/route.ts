@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server";
 import { jsonSuccess } from "@/lib/api-response";
 import { getCurrentUser } from "@/lib/auth";
-import { getPostDetail } from "@/lib/posts";
+import { getPostDetail } from "@/lib/services/post-read.service";
 import { isUUID } from "@/lib/validators";
 import { requireCurrentUser } from "@/lib/server/auth-guard";
 import { RouteError, toRouteErrorResponse } from "@/lib/server/route-error";
-import { deletePost, updatePost } from "@/lib/services/post.service";
+import { deletePost, updatePost } from "@/lib/services/post-write.service";
 
 export const runtime = "nodejs";
 

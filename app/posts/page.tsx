@@ -2,7 +2,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PostList from "@/components/post/PostList";
 import { getPositivePageNumber } from "@/lib/validators";
-import { getPosts } from "@/lib/posts";
+import { getPosts } from "@/lib/services/post-read.service";
 
 type PostsPageProps = {
   searchParams: Promise<{

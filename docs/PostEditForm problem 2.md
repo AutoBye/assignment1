@@ -73,4 +73,4 @@ currentUser.id
 
 이건 좋은 학습 포인트입니다.
 
-> dependency array에는 effect 안에서 실제로 사용하는 값을 넣는다.                                                                                                                                                                                                                                                          
+> dependency array에는 effect 안에서 실제로 사용하는 값을 넣는다.

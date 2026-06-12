@@ -26,10 +26,6 @@ type CommentRecord = {
   author: CommentAuthorRecord;
 };
 
-type RootCommentRecord = CommentRecord & {
-  replies: CommentRecord[];
-};
-
 export type CommentsPageResult = {
   comments: CommentItem[];
   pagination: CommentPaginationResponse;
@@ -224,7 +220,6 @@ export async function getCommentsByPostId(
   options: GetCommentsOptions = {},
 ): Promise<CommentsPageResult> {
   const notFoundBehavior = options.notFoundBehavior ?? "throw";
-
   const postExists = await ensurePostExists(postId, notFoundBehavior);
 
   if (!postExists) {
@@ -261,9 +256,7 @@ export async function getCommentsByPostId(
   });
 
   return {
-    comments: comments.map((comment: RootCommentRecord) =>
-      toCommentItem(comment),
-    ),
+    comments: comments.map((comment) => toCommentItem(comment)),
     pagination: {
       currentPage,
       totalPages,

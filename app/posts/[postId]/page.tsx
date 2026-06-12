@@ -3,10 +3,10 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PostDetailClient from "@/components/post/PostDetailClient";
 import { getCurrentUser } from "@/lib/auth";
-import { getPostDetail } from "@/lib/posts";
+import { getPostDetail } from "@/lib/services/post-read.service";
 import { CurrentUserProvider } from "@/components/providers/CurrentUserProvider";
 import { recordPostView } from "@/lib/post-views";
-import {getCommentsByPostId} from "@/lib/services/comment.service";
+import { getCommentsByPostId } from "@/lib/services/comment.service";
 
 type PostDetailPageProps = {
   params: Promise<{

@@ -1,10 +1,10 @@
 import { formatDate } from "@/lib/date";
 import { CommentItem } from "@/types/comment";
-import {CommentReplyCard} from "@/components/comments/CommentReplyCard";
-import {Button} from "@/components/ui/button";
-import {Card, CardContent} from "@/components/ui/card";
-import {Textarea} from "@/components/ui/textarea";
-import {useCurrentUser} from "@/components/providers/CurrentUserProvider";
+import { CommentReplyCard } from "@/components/comments/CommentReplyCard";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 
 type CommentItemCardProps = {
   comment: CommentItem;

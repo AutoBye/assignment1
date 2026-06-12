@@ -12,7 +12,7 @@ type EditPostPageProps = {
 };
 
 export default async function EditPostPage({ params }: EditPostPageProps) {
-  const currentUser  = await getCurrentUser();
+  const currentUser = await getCurrentUser();
 
   if (!currentUser) {
     redirect(`/login`);

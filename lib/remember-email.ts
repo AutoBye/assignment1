@@ -17,106 +17,105 @@ const REMEMBER_EMAIL_CHANGE_EVENT = "remember-email-change";
 // 방식을 바꿔보자
 
 function canUseLocalStorage() {
-	return (
-		typeof window !== "undefined" &&
-		typeof window.localStorage !== "undefined"
-	);
+  return (
+    typeof window !== "undefined" && typeof window.localStorage !== "undefined"
+  );
 }
 
 function notifyRememberEmailChange() {
-	window.dispatchEvent(new Event(REMEMBER_EMAIL_CHANGE_EVENT));
+  window.dispatchEvent(new Event(REMEMBER_EMAIL_CHANGE_EVENT));
 }
 
 export function getRememberedEmail() {
-	if (!canUseLocalStorage()) {
-		return "";
-	}
+  if (!canUseLocalStorage()) {
+    return "";
+  }
 
-	try {
-		return window.localStorage.getItem(REMEMBER_EMAIL_KEY) ?? "";
-	} catch {
-		return "";
-	}
+  try {
+    return window.localStorage.getItem(REMEMBER_EMAIL_KEY) ?? "";
+  } catch {
+    return "";
+  }
 }
 
 export function getRememberEmailChecked() {
-	if (!canUseLocalStorage()) {
-		return false;
-	}
+  if (!canUseLocalStorage()) {
+    return false;
+  }
 
-	try {
-		return window.localStorage.getItem(REMEMBER_EMAIL_KEY) !== null;
-	} catch {
-		return false;
-	}
+  try {
+    return window.localStorage.getItem(REMEMBER_EMAIL_KEY) !== null;
+  } catch {
+    return false;
+  }
 }
 
 export function saveRememberedEmail(email: string) {
-	if (!canUseLocalStorage()) {
-		return false;
-	}
+  if (!canUseLocalStorage()) {
+    return false;
+  }
 
-	try {
-		window.localStorage.setItem(REMEMBER_EMAIL_KEY, email);
-		notifyRememberEmailChange();
-		return true;
-	} catch {
-		return false;
-	}
+  try {
+    window.localStorage.setItem(REMEMBER_EMAIL_KEY, email);
+    notifyRememberEmailChange();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function removeRememberedEmail() {
-	if (!canUseLocalStorage()) {
-		return false;
-	}
+  if (!canUseLocalStorage()) {
+    return false;
+  }
 
-	try {
-		window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
-		notifyRememberEmailChange();
-		return true;
-	} catch {
-		return false;
-	}
+  try {
+    window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
+    notifyRememberEmailChange();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function subscribeRememberEmail(callback: () => void) {
-	window.addEventListener("storage", callback);
-	window.addEventListener(REMEMBER_EMAIL_CHANGE_EVENT, callback);
+  window.addEventListener("storage", callback);
+  window.addEventListener(REMEMBER_EMAIL_CHANGE_EVENT, callback);
 
-	return () => {
-		window.removeEventListener("storage", callback);
-		window.removeEventListener(REMEMBER_EMAIL_CHANGE_EVENT, callback);
-	};
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(REMEMBER_EMAIL_CHANGE_EVENT, callback);
+  };
 }
 
 function getRememberedEmailSnapshot() {
-	return getRememberedEmail();
+  return getRememberedEmail();
 }
 
 function getRememberedEmailServerSnapshot() {
-	return "";
+  return "";
 }
 
 function getRememberEmailCheckedSnapshot() {
-	return getRememberEmailChecked();
+  return getRememberEmailChecked();
 }
 
 function getRememberEmailCheckedServerSnapshot() {
-	return false;
+  return false;
 }
 
 export function useRememberedEmail() {
-	return useSyncExternalStore(
-		subscribeRememberEmail,
-		getRememberedEmailSnapshot,
-		getRememberedEmailServerSnapshot,
-	);
+  return useSyncExternalStore(
+    subscribeRememberEmail,
+    getRememberedEmailSnapshot,
+    getRememberedEmailServerSnapshot,
+  );
 }
 
 export function useRememberEmailChecked() {
-	return useSyncExternalStore(
-		subscribeRememberEmail,
-		getRememberEmailCheckedSnapshot,
-		getRememberEmailCheckedServerSnapshot,
-	);
+  return useSyncExternalStore(
+    subscribeRememberEmail,
+    getRememberEmailCheckedSnapshot,
+    getRememberEmailCheckedServerSnapshot,
+  );
 }

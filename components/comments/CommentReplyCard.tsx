@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import type { CommentItem } from "@/types/comment";
-import {useCurrentUser} from "@/components/providers/CurrentUserProvider";
+import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 
 type CommentReplyCardProps = {
   reply: CommentItem;

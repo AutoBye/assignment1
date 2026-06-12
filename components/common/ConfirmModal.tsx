@@ -20,25 +20,24 @@ export default function ConfirmModal() {
   const confirm = useConfirmModalStore((state) => state.confirm);
   const cancel = useConfirmModalStore((state) => state.cancel);
 
-	return (
-		<Dialog open={isOpen} onOpenChange={(open) => !open && cancel()}>
-			<DialogContent>
-				<DialogHeader>
-					<DialogTitle>{title}</DialogTitle>
-					<DialogDescription>{message}</DialogDescription>
-				</DialogHeader>
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && cancel()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{message}</DialogDescription>
+        </DialogHeader>
 
-				<DialogFooter>
-					<Button type="button" variant="outline" onClick={cancel}>
-						{cancelText}
-					</Button>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={cancel}>
+            {cancelText}
+          </Button>
 
-					<Button type="button" variant="destructive" onClick={confirm}>
-						{confirmText}
-					</Button>
-				</DialogFooter>
-			</DialogContent>
-		</Dialog>
-	);
+          <Button type="button" variant="destructive" onClick={confirm}>
+            {confirmText}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
-

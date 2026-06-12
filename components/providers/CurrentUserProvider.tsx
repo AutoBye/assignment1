@@ -1,8 +1,8 @@
 "use client";
 
-import {CurrentUser} from "@/types/auth";
-import {ReactNode} from "react";
-import {useCurrentUserQuery} from "@/lib/hooks/use-current-user-query";
+import { CurrentUser } from "@/types/auth";
+import { ReactNode } from "react";
+import { useCurrentUserQuery } from "@/lib/hooks/use-current-user-query";
 
 type CurrentUserProviderProps = {
   currentUser: CurrentUser | null;
@@ -10,12 +10,12 @@ type CurrentUserProviderProps = {
 };
 
 export function CurrentUserProvider({
-    currentUser,
-    children,
+  currentUser,
+  children,
 }: CurrentUserProviderProps) {
   useCurrentUserQuery(currentUser);
 
-  return <>{children}</>
+  return <>{children}</>;
 }
 
 export function useCurrentUser(initialUser?: CurrentUser | null) {

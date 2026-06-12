@@ -44,4 +44,3 @@ export function getPositivePageNumber(value: string | null | undefined) {
 
   return pageNumber;
 }
-

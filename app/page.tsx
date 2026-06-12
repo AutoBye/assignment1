@@ -3,7 +3,10 @@ import Footer from "@/components/layout/Footer";
 import BoardIntroSection from "@/components/home/BoardIntroSection";
 import PopularPostsSection from "@/components/home/PopularPostsSection";
 import RecentPostsSection from "@/components/home/RecentPostsSection";
-import { getPopularPosts, getRecentPosts } from "@/lib/posts";
+import {
+  getPopularPosts,
+  getRecentPosts,
+} from "@/lib/services/post-read.service";
 
 // 서버 컴포넌트임
 export default async function Home() {

@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server";
 import { jsonSuccess } from "@/lib/api-response";
 import { POSTS_PER_PAGE } from "@/lib/constants";
-import { getPosts } from "@/lib/posts";
+import { getPosts } from "@/lib/services/post-read.service";
 import { getPositivePageNumber } from "@/lib/validators";
 import { requireCurrentUser } from "@/lib/server/auth-guard";
 import { toRouteErrorResponse } from "@/lib/server/route-error";
-import { createPost } from "@/lib/services/post.service";
+import { createPost } from "@/lib/services/post-write.service";
 
 export const runtime = "nodejs";
 
