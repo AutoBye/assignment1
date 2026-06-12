@@ -7,7 +7,7 @@ import type { CommentPaginationResponse } from "@/types/api";
 import type { CommentItem } from "@/types/comment";
 import type { PostDetail } from "@/types/post";
 import { getErrorMessage } from "@/lib/api/client";
-import { deletePostRequest } from "@/lib/queries/posts-query";
+import { deletePostRequest } from "@/lib/requests/createPostRequest";
 import { formatDate } from "@/lib/date";
 import CommentSection from "@/components/comments/CommentSection";
 import BookmarkButton from "@/components/post/BookmarkButton";

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   fetchCurrentUser,
   type CurrentUserResponse,
-} from "@/lib/queries/auth-query";
+} from "@/lib/requests/authRequest";
 import { queryKeys } from "@/lib/query-keys";
 import type { CurrentUser } from "@/types/auth";
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { getErrorMessage } from "@/lib/api/client";
-import { togglePostLikeRequest } from "@/lib/queries/posts-query";
+import { togglePostLikeRequest } from "@/lib/requests/createPostRequest";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 
 type LikeButtonProps = {

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { formatDate } from "@/lib/date";
 import { queryKeys } from "@/lib/query-keys";
-import { fetchBookmarkedPosts } from "@/lib/queries/me-query";
+import { fetchBookmarkedPosts } from "@/lib/requests/updateMyProfile";
 
 export default function BookmarkedPosts() {
   const { data, isLoading, isError } = useQuery({

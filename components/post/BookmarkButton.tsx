@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { getErrorMessage } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query-keys";
-import { togglePostBookmarkRequest } from "@/lib/queries/posts-query";
+import { togglePostBookmarkRequest } from "@/lib/requests/createPostRequest";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 
 type BookmarkButtonProps = {

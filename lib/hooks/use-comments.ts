@@ -13,7 +13,7 @@ import {
   deleteCommentRequest,
   fetchComments,
   updateCommentRequest,
-} from "@/lib/queries/comments-query";
+} from "@/lib/requests/fetchComments";
 import { useConfirmModalStore } from "@/lib/stores/confirm-modal-store";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import { useToastStore } from "@/lib/stores/toast-store";

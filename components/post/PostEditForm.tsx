@@ -13,7 +13,7 @@ import { getErrorMessage } from "@/lib/api/client";
 import {
   fetchPostDetailRequest,
   updatePostRequest,
-} from "@/lib/queries/posts-query";
+} from "@/lib/requests/createPostRequest";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {

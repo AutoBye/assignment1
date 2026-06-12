@@ -10,7 +10,7 @@ import {
   POST_TITLE_MIN_LENGTH,
 } from "@/lib/constants";
 import { getErrorMessage } from "@/lib/api/client";
-import { createPostRequest } from "@/lib/queries/posts-query";
+import { createPostRequest } from "@/lib/requests/createPostRequest";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

@@ -12,7 +12,7 @@ import {
   useRememberEmailChecked,
 } from "@/lib/client/remember-email";
 import { getErrorMessage } from "@/lib/api/client";
-import { loginRequest } from "@/lib/queries/auth-query";
+import { loginRequest } from "@/lib/requests/authRequest";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

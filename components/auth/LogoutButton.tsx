@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/api/client";
-import { logoutRequest } from "@/lib/queries/auth-query";
+import { logoutRequest } from "@/lib/requests/authRequest";
 import { queryKeys } from "@/lib/query-keys";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import { currentUserQueryKey } from "@/lib/hooks/use-current-user-query";

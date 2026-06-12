@@ -11,7 +11,7 @@ import {
   currentUserQueryKey,
   useCurrentUserQuery,
 } from "@/lib/hooks/use-current-user-query";
-import { updateMyProfile } from "@/lib/queries/me-query";
+import { updateMyProfile } from "@/lib/requests/updateMyProfile";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import { useToastStore } from "@/lib/stores/toast-store";
 import type { CurrentUser } from "@/types/auth";

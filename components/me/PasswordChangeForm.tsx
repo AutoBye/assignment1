@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { SubmitEventHandler } from "react";
 import { getErrorMessage } from "@/lib/api/client";
-import { updateMyPassword } from "@/lib/queries/me-query";
+import { updateMyPassword } from "@/lib/requests/updateMyProfile";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
