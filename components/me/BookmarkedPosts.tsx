@@ -2,26 +2,10 @@
 
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { BookmarkedPostsResponse } from "@/types/post";
 import { useQuery } from "@tanstack/react-query";
 import { formatDate } from "@/lib/date";
 import { queryKeys } from "@/lib/query-keys";
-
-async function fetchBookmarkedPosts() {
-  const response = await fetch(`/api/me/bookmarks`, {
-    method: "GET",
-  });
-
-  const data = (await response.json()) as BookmarkedPostsResponse;
-
-  if (!response.ok) {
-    throw new Error(data.message ?? "북마크 목록을 가져오지 못했습니다.");
-  }
-
-  return {
-    posts: data.posts ?? [],
-  };
-}
+import { fetchBookmarkedPosts } from "@/lib/queries/me-query";
 
 export default function BookmarkedPosts() {
   const { data, isLoading, isError } = useQuery({

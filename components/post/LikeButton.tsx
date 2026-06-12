@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Button } from "@/components/ui/button";
-import type { LikeButtonResponse } from "@/types/post";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
+import {togglePostLike} from "@/lib/queries/post-action-query";
 
 type LikeButtonProps = {
   postId: string;
@@ -40,24 +40,7 @@ export default function LikeButton({
     setIsLoading(true);
 
     try {
-      const response = await fetch(`/api/posts/${postId}/like`, {
-        method: "POST",
-      });
-
-      const data = (await response.json()) as LikeButtonResponse;
-
-      if (!response.ok) {
-        openErrorModal(data.message ?? "좋아요 처리에 실패했습니다.");
-        return;
-      }
-
-      if (
-        typeof data.liked !== "boolean" ||
-        typeof data.likeCount !== "number"
-      ) {
-        openErrorModal("좋아요 응답이 올바르지 않습니다.");
-        return;
-      }
+      const data = await togglePostLike(postId);
 
       onLikeChange?.(data.likeCount, data.liked);
     } catch {

@@ -26,8 +26,8 @@ export default async function MyPage() {
           </p>
         </div>
 
-        <ProfileSummary currentUser={currentUser} />
-        <ProfileForm currentUser={currentUser} />
+        <ProfileSummary initialUser={currentUser} />
+        <ProfileForm initialUser={currentUser} />
         <PasswordChangeForm />
         <BookmarkedPosts />
       </main>

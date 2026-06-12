@@ -6,10 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {useErrorModalStore} from "@/lib/stores/error-modal-store";
 import {useToastStore} from "@/lib/stores/toast-store";
-
-type PasswordChangeResponse = {
-  message: string;
-};
+import {updateMyPassword} from "@/lib/queries/me-query";
 
 export default function PasswordChangeForm() {
   const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
@@ -39,23 +36,10 @@ export default function PasswordChangeForm() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/me/password`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-        }),
+      const data = await updateMyPassword({
+        currentPassword,
+        newPassword,
       });
-
-      const data = (await response.json()) as PasswordChangeResponse;
-
-      if (!response.ok) {
-        openErrorModal(data.message ?? "비밀번호 변경에 실패했습니다.");
-        return;
-      }
 
       showToast({
         type: "success",

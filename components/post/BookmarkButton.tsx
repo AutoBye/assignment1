@@ -3,9 +3,9 @@ import { Bookmark } from "lucide-react";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Button } from "@/components/ui/button";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
-import type { BookmarkButtonResponse } from "@/types/post";
-import {useQueryClient} from "@tanstack/react-query";
-import {queryKeys} from "@/lib/query-keys";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { togglePostBookmark } from "@/lib/queries/post-action-query";
 
 type BookmarkButtonProps = {
   postId: string;
@@ -34,24 +34,7 @@ export default function BookmarkButton({
     setIsLoading(true);
 
     try {
-      const response = await fetch(`/api/posts/${postId}/bookmark`, {
-        method: "POST",
-      });
-
-      const data = (await response.json()) as BookmarkButtonResponse;
-
-      if (!response.ok) {
-        openErrorModal(data.message ?? "북마크 처리에 실패했습니다.");
-        return;
-      }
-
-      if (
-        typeof data.bookmarked !== "boolean" ||
-        typeof data.bookmarkCount !== "number"
-      ) {
-        openErrorModal("북마크 응답이 올바르지 않습니다.");
-        return;
-      }
+      const data = await togglePostBookmark(postId);
 
       onBookmarkChange?.(data.bookmarkCount, data.bookmarked);
 

@@ -8,26 +8,23 @@ import { CurrentUser } from "@/types/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import { useToastStore } from "@/lib/stores/toast-store";
-import { currentUserQueryKey } from "@/lib/use-current-user";
+import {currentUserQueryKey, useCurrentUserQuery} from "@/lib/use-current-user";
+import { updateMyProfile } from "@/lib/queries/me-query";
 
 type ProfileFormProps = {
-  currentUser: CurrentUser;
+  initialUser: CurrentUser;
 };
 
-type ProfileUpdateResponse = {
-  message: string;
-  user?: CurrentUser;
-};
-
-export default function ProfileForm({ currentUser }: ProfileFormProps) {
+export default function ProfileForm({ initialUser }: ProfileFormProps) {
   const queryClient = useQueryClient();
   const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
   const showToast = useToastStore((state) => state.showToast);
 
-  const [name, setName] = useState(currentUser.name);
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: currentUserData } = useCurrentUserQuery();
+  const latestUser = currentUserData?.user ?? initialUser;
 
-  //const isUnchanged = name.trim() === currentUser.name;
+  const [name, setName] = useState(latestUser.name);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
@@ -39,7 +36,7 @@ export default function ProfileForm({ currentUser }: ProfileFormProps) {
       return;
     }
 
-    if (trimmedName === currentUser.name) {
+    if (trimmedName === latestUser.name) {
       showToast({
         type: "info",
         message: "변경된 내용이 없습니다.",
@@ -49,31 +46,15 @@ export default function ProfileForm({ currentUser }: ProfileFormProps) {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/me/profile`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: trimmedName,
-        }),
+      const data = await updateMyProfile({
+        name: trimmedName,
       });
-
-      const data = (await response.json()) as ProfileUpdateResponse;
-
-      if (!response.ok) {
-        openErrorModal(data.message ?? "프로필 수정에 실패했습니다.");
-        return;
-      }
-
-      if (!data.user) {
-        openErrorModal("프로필 응답이 올바르지 않습니다.");
-        return;
-      }
 
       queryClient.setQueryData(currentUserQueryKey, {
         user: data.user,
       });
+
+      setName(data.user.name);
 
       showToast({
         type: "success",
