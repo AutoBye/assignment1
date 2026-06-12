@@ -7,11 +7,11 @@ import type { SubmitEventHandler } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getErrorMessage } from "@/lib/api/client";
 import { registerRequest } from "@/lib/queries/auth-query";
-import { currentUserQueryKey } from "@/lib/use-current-user";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {currentUserQueryKey} from "@/lib/hooks/use-current-user-query";
 
 export default function RegisterPage() {
   const router = useRouter();

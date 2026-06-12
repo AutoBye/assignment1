@@ -4,7 +4,7 @@
 import Link from "next/link";
 import LogoutButton from "@/components/auth/LogoutButton";
 import { buttonVariants } from "@/components/ui/button";
-import { useCurrentUserQuery } from "@/lib/use-current-user";
+import {useCurrentUserQuery} from "@/lib/hooks/use-current-user-query";
 
 export default function Header() {
   const { data, isLoading } = useCurrentUserQuery();

@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/api/client";
 import { logoutRequest } from "@/lib/queries/auth-query";
 import { queryKeys } from "@/lib/query-keys";
-import { currentUserQueryKey } from "@/lib/use-current-user";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
+import {currentUserQueryKey} from "@/lib/hooks/use-current-user-query";
 
 export default function LogoutButton() {
   const router = useRouter();

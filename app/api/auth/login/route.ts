@@ -1,9 +1,9 @@
 // 입력 검증 / 유저 조회 / 비밀번호 해쉬 검증 / 세션 생성 / 쿠키 설정/ 응답 반환
 import { NextRequest } from "next/server";
 import { createSession, setSessionCookie } from "@/lib/session";
-import { validateLoginInput } from "@/lib/auth-validation";
 import {jsonError, jsonUser} from "@/lib/api-response";
 import {loginWithEmailPassword} from "@/lib/auth-service";
+import {validateLoginInput} from "@/lib/validations/user";
 
 export const runtime = "nodejs";
 

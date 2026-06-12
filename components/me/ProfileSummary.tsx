@@ -2,7 +2,7 @@
 
 import { formatDate } from "@/lib/date";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCurrentUserQuery } from "@/lib/use-current-user";
+import {useCurrentUserQuery} from "@/lib/hooks/use-current-user-query";
 
 type ProfileSummaryProps = {
   initialUser: {

@@ -5,16 +5,13 @@ import type { SubmitEventHandler } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { CurrentUser } from "@/types/auth";
 import { getErrorMessage } from "@/lib/api/client";
-import {
-  currentUserQueryKey,
-  useCurrentUserQuery,
-} from "@/lib/use-current-user";
 import { updateMyProfile } from "@/lib/queries/me-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import { useToastStore } from "@/lib/stores/toast-store";
+import {currentUserQueryKey, useCurrentUserQuery} from "@/lib/hooks/use-current-user-query";
 
 type ProfileFormProps = {
   initialUser: CurrentUser;
