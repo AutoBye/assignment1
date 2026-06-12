@@ -3,7 +3,7 @@ import BookmarkedPosts from "@/components/me/BookmarkedPosts";
 import PasswordChangeForm from "@/components/me/PasswordChangeForm";
 import ProfileForm from "@/components/me/ProfileForm";
 import ProfileSummary from "@/components/me/ProfileSummary";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/server/auth";
 
 export default async function MyPage() {
   const currentUser = await getCurrentUser();

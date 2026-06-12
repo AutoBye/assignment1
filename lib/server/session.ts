@@ -5,8 +5,8 @@ import "server-only";
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { CURRENT_USER_SELECT } from "@/lib/auth-user";
-import { prisma } from "@/lib/prisma";
+import { CURRENT_USER_SELECT } from "@/lib/server/auth-user";
+import { prisma } from "@/lib/server/prisma";
 
 //쿠키 이름
 export const SESSION_COOKIE_NAME = "assignment1_session";

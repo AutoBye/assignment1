@@ -1,8 +1,8 @@
 import "server-only";
 
-import { CURRENT_USER_SELECT, toCurrentUser } from "@/lib/auth-user";
-import { hashPassword, verifyPassword } from "@/lib/password";
-import { prisma } from "@/lib/prisma";
+import { CURRENT_USER_SELECT, toCurrentUser } from "@/lib/server/auth-user";
+import { hashPassword, verifyPassword } from "@/lib/server/password";
+import { prisma } from "@/lib/server/prisma";
 import { RouteError } from "@/lib/server/route-error";
 import {
   validatePasswordChangeInput,

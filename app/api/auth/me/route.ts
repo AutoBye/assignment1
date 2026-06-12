@@ -1,5 +1,5 @@
-import { getCurrentUser } from "@/lib/auth";
-import { jsonUser } from "@/lib/api-response";
+import { getCurrentUser } from "@/lib/server/auth";
+import { jsonUser } from "@/lib/server/api-response";
 
 export const runtime = "nodejs";
 

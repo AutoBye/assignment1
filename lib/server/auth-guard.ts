@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/server/auth";
 import { RouteError } from "@/lib/server/route-error";
 
 export async function requireCurrentUser() {

@@ -2,8 +2,8 @@
 // 클라이언트 훅 들고오지마라
 // 현재 로그인 사용자 가져오기
 import "server-only";
-import { toCurrentUser } from "@/lib/auth-user";
-import { getSession } from "@/lib/session";
+import { toCurrentUser } from "@/lib/server/auth-user";
+import { getSession } from "@/lib/server/session";
 import type { CurrentUser } from "@/types/auth";
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {

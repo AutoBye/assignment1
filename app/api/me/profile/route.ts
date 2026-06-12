@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { jsonSuccess } from "@/lib/api-response";
+import { jsonSuccess } from "@/lib/server/api-response";
 import { requireCurrentUser } from "@/lib/server/auth-guard";
 import { toRouteErrorResponse } from "@/lib/server/route-error";
 import { updateMyProfile } from "@/lib/services/me.service";

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import PostEditForm from "@/components/post/PostEditForm";
 import { CurrentUserProvider } from "@/components/providers/CurrentUserProvider";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/server/auth";
 
 type EditPostPageProps = {
   params: Promise<{

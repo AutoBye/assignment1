@@ -1,5 +1,5 @@
 import PostList from "@/components/post/PostList";
-import { getPositivePageNumber } from "@/lib/validators";
+import { getPositivePageNumber } from "@/lib/validations/common";
 import { getPosts } from "@/lib/services/post-read.service";
 
 type PostsPageProps = {

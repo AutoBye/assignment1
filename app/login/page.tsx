@@ -10,7 +10,7 @@ import {
   saveRememberedEmail,
   useRememberedEmail,
   useRememberEmailChecked,
-} from "@/lib/remember-email";
+} from "@/lib/client/remember-email";
 import { getErrorMessage } from "@/lib/api/client";
 import { loginRequest } from "@/lib/queries/auth-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";

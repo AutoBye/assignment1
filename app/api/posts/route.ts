@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
-import { jsonSuccess } from "@/lib/api-response";
+import { jsonSuccess } from "@/lib/server/api-response";
 import { POSTS_PER_PAGE } from "@/lib/constants";
 import { getPosts } from "@/lib/services/post-read.service";
-import { getPositivePageNumber } from "@/lib/validators";
+import { getPositivePageNumber } from "@/lib/validations/common";
 import { requireCurrentUser } from "@/lib/server/auth-guard";
 import { toRouteErrorResponse } from "@/lib/server/route-error";
 import { createPost } from "@/lib/services/post-write.service";

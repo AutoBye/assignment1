@@ -1,8 +1,8 @@
 import "server-only";
 
 import crypto from "crypto";
-import { prisma } from "@/lib/prisma";
-import { isUUID } from "@/lib/validators";
+import { prisma } from "@/lib/server/prisma";
+import { isUUID } from "@/lib/validations/common";
 
 type RequestHeaders = {
   get(name: string): string | null;

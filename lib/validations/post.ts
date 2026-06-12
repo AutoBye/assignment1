@@ -3,7 +3,7 @@ import {
   POST_TITLE_MAX_LENGTH,
   POST_TITLE_MIN_LENGTH,
 } from "@/lib/constants";
-import { getStringValue } from "@/lib/validators";
+import { getStringValue } from "@/lib/validations/common";
 import {
   validationError,
   validationSuccess,

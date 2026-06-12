@@ -4,9 +4,9 @@ import {
   CURRENT_USER_SELECT,
   CURRENT_USER_WITH_PASSWORD_SELECT,
   toCurrentUser,
-} from "@/lib/auth-user";
-import { hashPassword, verifyPassword } from "@/lib/password";
-import { prisma } from "@/lib/prisma";
+} from "@/lib/server/auth-user";
+import { hashPassword, verifyPassword } from "@/lib/server/password";
+import { prisma } from "@/lib/server/prisma";
 import type { CurrentUser } from "@/types/auth";
 
 export type AuthUser = CurrentUser;

@@ -1,10 +1,10 @@
 import { headers } from "next/headers";
 import PostDetailClient from "@/components/post/PostDetailClient";
 import { CurrentUserProvider } from "@/components/providers/CurrentUserProvider";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/server/auth";
 import { getCommentsByPostId } from "@/lib/services/comment.service";
 import { getPostDetail } from "@/lib/services/post-read.service";
-import { recordPostView } from "@/lib/post-views";
+import { recordPostView } from "@/lib/server/post-views";
 
 type PostDetailPageProps = {
   params: Promise<{

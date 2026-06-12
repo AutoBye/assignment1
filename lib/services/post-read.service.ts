@@ -6,8 +6,8 @@ import {
   RECENT_POSTS_LIMIT,
 } from "@/lib/constants";
 import { formatDate, formatDateOnly } from "@/lib/date";
-import { prisma } from "@/lib/prisma";
-import { isUUID } from "@/lib/validators";
+import { prisma } from "@/lib/server/prisma";
+import { isUUID } from "@/lib/validations/common";
 import type {
   PopularPostItem,
   PostDetail,

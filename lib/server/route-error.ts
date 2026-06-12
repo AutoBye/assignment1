@@ -1,6 +1,6 @@
 import "server-only";
 
-import { jsonError } from "@/lib/api-response";
+import { jsonError } from "@/lib/server/api-response";
 
 export class RouteError extends Error {
   readonly status: number;

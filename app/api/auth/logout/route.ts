@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { clearSessionCookie, revokeCurrentSession } from "@/lib/session";
+import { clearSessionCookie, revokeCurrentSession } from "@/lib/server/session";
 
 export const runtime = "nodejs";
 

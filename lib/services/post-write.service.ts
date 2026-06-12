@@ -1,7 +1,7 @@
 import "server-only";
 
-import { prisma } from "@/lib/prisma";
-import { isUUID } from "@/lib/validators";
+import { prisma } from "@/lib/server/prisma";
+import { isUUID } from "@/lib/validations/common";
 import { validatePostInput } from "@/lib/validations/post";
 import { RouteError } from "@/lib/server/route-error";
 

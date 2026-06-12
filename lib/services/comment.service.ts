@@ -1,9 +1,9 @@
 import "server-only";
 
 import { COMMENTS_PER_PAGE } from "@/lib/constants";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/server/prisma";
 import { RouteError } from "@/lib/server/route-error";
-import { isUUID } from "@/lib/validators";
+import { isUUID } from "@/lib/validations/common";
 import {
   validateCreateCommentInput,
   validateUpdateCommentInput,

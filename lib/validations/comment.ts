@@ -6,7 +6,7 @@ import {
   getOptionalStringValue,
   getStringValue,
   isUUID,
-} from "@/lib/validators";
+} from "@/lib/validations/common";
 import {
   validationError,
   validationSuccess,
