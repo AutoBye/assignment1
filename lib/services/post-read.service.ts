@@ -8,15 +8,293 @@ import {
 import { formatDate, formatDateOnly } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 import { isUUID } from "@/lib/validators";
-import type { PostDetail } from "@/types/post";
+import type {
+  PopularPostItem,
+  PostDetail,
+  PostListItem,
+  RecentPostItem,
+} from "@/types/post";
 
-/** DB에서 인기 게시글 가져오기
- * <br> 좋아요 수가 많은 게시글 우선
- * <br> 좋아요 수 같으면 댓글 수 많은 게시글 우선
- * <br> 그것도 같으면 최신 순
- * <br> `최대 POPULAR_POSTS_LIMIT`개까지
- * */
-export async function getPopularPosts() {
+type GetPostsResult = {
+  posts: PostListItem[];
+  currentPage: number;
+  totalPages: number;
+  query: string;
+  totalPostCount: number;
+};
+
+const POST_AUTHOR_NAME_SELECT = {
+  name: true,
+} as const;
+
+const POST_AUTHOR_SUMMARY_SELECT = {
+  name: true,
+  email: true,
+} as const;
+
+const POST_AUTHOR_DETAIL_SELECT = {
+  id: true,
+  name: true,
+  email: true,
+} as const;
+
+const POPULAR_POST_SELECT = {
+  id: true,
+  title: true,
+  createdAt: true,
+  author: {
+    select: POST_AUTHOR_NAME_SELECT,
+  },
+  _count: {
+    select: {
+      likes: true,
+      comments: true,
+    },
+  },
+} as const;
+
+const RECENT_POST_SELECT = {
+  id: true,
+  title: true,
+  createdAt: true,
+  author: {
+    select: POST_AUTHOR_NAME_SELECT,
+  },
+} as const;
+
+const POST_LIST_SELECT = {
+  id: true,
+  title: true,
+  content: true,
+  viewCount: true,
+  createdAt: true,
+  author: {
+    select: POST_AUTHOR_SUMMARY_SELECT,
+  },
+  _count: {
+    select: {
+      comments: true,
+      likes: true,
+      bookmarks: true,
+    },
+  },
+} as const;
+
+const POST_DETAIL_SELECT = {
+  id: true,
+  title: true,
+  content: true,
+  viewCount: true,
+  createdAt: true,
+  updatedAt: true,
+  author: {
+    select: POST_AUTHOR_DETAIL_SELECT,
+  },
+  _count: {
+    select: {
+      comments: true,
+      likes: true,
+      bookmarks: true,
+    },
+  },
+} as const;
+
+function getTotalPages(totalCount: number, pageSize: number) {
+  return Math.max(1, Math.ceil(totalCount / pageSize));
+}
+
+function getCurrentPage(requestedPage: number, totalPages: number) {
+  if (!Number.isInteger(requestedPage) || requestedPage < 1) {
+    return 1;
+  }
+
+  return Math.min(requestedPage, totalPages);
+}
+
+function getPostSearchWhere(keyword: string) {
+  if (!keyword) {
+    return undefined;
+  }
+
+  return {
+    OR: [
+      {
+        title: {
+          contains: keyword,
+          mode: "insensitive" as const,
+        },
+      },
+      {
+        content: {
+          contains: keyword,
+          mode: "insensitive" as const,
+        },
+      },
+      {
+        author: {
+          name: {
+            contains: keyword,
+            mode: "insensitive" as const,
+          },
+        },
+      },
+    ],
+  };
+}
+
+function toPopularPostItem(post: {
+  id: string;
+  title: string;
+  createdAt: Date;
+  author: {
+    name: string;
+  };
+  _count: {
+    likes: number;
+    comments: number;
+  };
+}): PopularPostItem {
+  return {
+    id: post.id,
+    title: post.title,
+    author: post.author.name,
+    createdAt: formatDateOnly(post.createdAt),
+    likeCount: post._count.likes,
+    commentCount: post._count.comments,
+  };
+}
+
+function toRecentPostItem(post: {
+  id: string;
+  title: string;
+  createdAt: Date;
+  author: {
+    name: string;
+  };
+}): RecentPostItem {
+  return {
+    id: post.id,
+    title: post.title,
+    author: post.author.name,
+    createdAt: formatDateOnly(post.createdAt),
+  };
+}
+
+function toPostListItem(post: {
+  id: string;
+  title: string;
+  content: string;
+  viewCount: number;
+  createdAt: Date;
+  author: {
+    name: string;
+    email: string;
+  };
+  _count: {
+    comments: number;
+    likes: number;
+    bookmarks: number;
+  };
+}): PostListItem {
+  return {
+    id: post.id,
+    title: post.title,
+    content: post.content,
+    viewCount: post.viewCount,
+    createdAt: formatDate(post.createdAt),
+    author: {
+      name: post.author.name,
+      email: post.author.email,
+    },
+    commentCount: post._count.comments,
+    likeCount: post._count.likes,
+    bookmarkCount: post._count.bookmarks,
+  };
+}
+
+function toPostDetail(
+  post: {
+    id: string;
+    title: string;
+    content: string;
+    viewCount: number;
+    createdAt: Date;
+    updatedAt: Date;
+    author: {
+      id: string;
+      name: string;
+      email: string;
+    };
+    _count: {
+      comments: number;
+      likes: number;
+      bookmarks: number;
+    };
+  },
+  currentUserStatus: {
+    likedByCurrentUser: boolean;
+    bookmarkedByCurrentUser: boolean;
+  },
+): PostDetail {
+  return {
+    id: post.id,
+    title: post.title,
+    content: post.content,
+    viewCount: post.viewCount,
+    createdAt: post.createdAt.toISOString(),
+    updatedAt: post.updatedAt.toISOString(),
+    author: post.author,
+    commentCount: post._count.comments,
+    likeCount: post._count.likes,
+    bookmarkCount: post._count.bookmarks,
+    likedByCurrentUser: currentUserStatus.likedByCurrentUser,
+    bookmarkedByCurrentUser: currentUserStatus.bookmarkedByCurrentUser,
+  };
+}
+
+async function getCurrentUserPostStatus(
+  postId: string,
+  currentUserId?: string,
+) {
+  if (!currentUserId) {
+    return {
+      likedByCurrentUser: false,
+      bookmarkedByCurrentUser: false,
+    };
+  }
+
+  const [existingLike, existingBookmark] = await Promise.all([
+    prisma.postLike.findUnique({
+      where: {
+        postId_userId: {
+          postId,
+          userId: currentUserId,
+        },
+      },
+      select: {
+        postId: true,
+      },
+    }),
+    prisma.bookmark.findUnique({
+      where: {
+        postId_userId: {
+          postId,
+          userId: currentUserId,
+        },
+      },
+      select: {
+        postId: true,
+      },
+    }),
+  ]);
+
+  return {
+    likedByCurrentUser: existingLike !== null,
+    bookmarkedByCurrentUser: existingBookmark !== null,
+  };
+}
+
+export async function getPopularPosts(): Promise<PopularPostItem[]> {
   const posts = await prisma.post.findMany({
     take: POPULAR_POSTS_LIMIT,
     orderBy: [
@@ -34,107 +312,37 @@ export async function getPopularPosts() {
         createdAt: "desc",
       },
     ],
-    select: {
-      id: true,
-      title: true,
-      createdAt: true,
-      author: {
-        select: {
-          name: true,
-        },
-      },
-      _count: {
-        select: {
-          likes: true,
-          comments: true,
-        },
-      },
-    },
+    select: POPULAR_POST_SELECT,
   });
 
-  return posts.map((post) => ({
-    id: post.id,
-    title: post.title,
-    author: post.author.name,
-    createdAt: formatDateOnly(post.createdAt),
-    likeCount: post._count.likes,
-    commentCount: post._count.comments,
-  }));
+  return posts.map(toPopularPostItem);
 }
 
-/** DB에서 최근 게시글 가져오기
- * <br> posts 테이블에서 게시글 가져옴
- * <br> 최신순 정렬
- * <br> 최대 `RECENT_POSTS_LIMIT`개까지
- * <br> 작성자 이름 <- 수정할까말까
- * */
-export async function getRecentPosts() {
+export async function getRecentPosts(): Promise<RecentPostItem[]> {
   const posts = await prisma.post.findMany({
     take: RECENT_POSTS_LIMIT,
     orderBy: {
       createdAt: "desc",
     },
-    select: {
-      id: true,
-      title: true,
-      createdAt: true,
-      author: {
-        select: {
-          name: true,
-        },
-      },
-    },
+    select: RECENT_POST_SELECT,
   });
 
-  return posts.map((post) => ({
-    id: post.id,
-    title: post.title,
-    author: post.author.name,
-    createdAt: formatDateOnly(post.createdAt),
-  }));
+  return posts.map(toRecentPostItem);
 }
 
-/** DB에서 페이지만큼 게시글 가져오기
- * <br> posts 테이블에서 게시글 가져옴
- * <br> 최신순 정렬
- * <br> 최대 `POSTS_PER_PAGE`개까지
- * <br> 06 - 10 검색 추가
- * @param page number: page
- * @param query 쿼리
- * */
-export async function getPosts(page: number, query = "") {
+export async function getPosts(
+  page: number,
+  query = "",
+): Promise<GetPostsResult> {
   const keyword = query.trim();
+  const where = getPostSearchWhere(keyword);
 
-  const where = keyword
-    ? {
-        OR: [
-          {
-            title: {
-              contains: keyword,
-              mode: "insensitive" as const,
-            },
-          },
-          {
-            content: {
-              contains: keyword,
-              mode: "insensitive" as const,
-            },
-          },
-          {
-            author: {
-              name: {
-                contains: keyword,
-                mode: "insensitive" as const,
-              },
-            },
-          },
-        ],
-      }
-    : undefined;
+  const totalPostCount = await prisma.post.count({
+    where,
+  });
 
-  const totalPostCount = await prisma.post.count({ where });
-  const totalPages = Math.max(1, Math.ceil(totalPostCount / POSTS_PER_PAGE));
-  const currentPage = Math.min(page, totalPages);
+  const totalPages = getTotalPages(totalPostCount, POSTS_PER_PAGE);
+  const currentPage = getCurrentPage(page, totalPages);
 
   const posts = await prisma.post.findMany({
     where,
@@ -143,43 +351,11 @@ export async function getPosts(page: number, query = "") {
     orderBy: {
       createdAt: "desc",
     },
-    select: {
-      id: true,
-      title: true,
-      content: true,
-      viewCount: true,
-      createdAt: true,
-      author: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-      _count: {
-        select: {
-          comments: true,
-          likes: true,
-          bookmarks: true,
-        },
-      },
-    },
+    select: POST_LIST_SELECT,
   });
 
   return {
-    posts: posts.map((post) => ({
-      id: post.id,
-      title: post.title,
-      content: post.content,
-      viewCount: post.viewCount,
-      createdAt: formatDate(post.createdAt),
-      author: {
-        name: post.author.name,
-        email: post.author.email,
-      },
-      commentCount: post._count.comments,
-      likeCount: post._count.likes,
-      bookmarkCount: post._count.bookmarks,
-    })),
+    posts: posts.map(toPostListItem),
     currentPage,
     totalPages,
     query: keyword,
@@ -187,11 +363,6 @@ export async function getPosts(page: number, query = "") {
   };
 }
 
-/** 게시글 정보 상세조회
- * <br>
- * <br>
- * <br>
- * */
 export async function getPostDetail(
   postId: string,
   currentUserId?: string,
@@ -204,81 +375,17 @@ export async function getPostDetail(
     where: {
       id: postId,
     },
-    select: {
-      id: true,
-      title: true,
-      content: true,
-      viewCount: true,
-      createdAt: true,
-      updatedAt: true,
-      author: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-      _count: {
-        select: {
-          comments: true,
-          likes: true,
-          bookmarks: true,
-        },
-      },
-    },
+    select: POST_DETAIL_SELECT,
   });
 
   if (!post) {
     return null;
   }
 
-  // 좋아요, 북마크만 처리 하면 됌 얘네는 중복 불가능
-  let likedByCurrentUser = false;
-  let bookmarkedByCurrentUser = false;
+  const currentUserStatus = await getCurrentUserPostStatus(
+    postId,
+    currentUserId,
+  );
 
-  if (currentUserId) {
-    const [existingLike, existingBookmark] = await Promise.all([
-      prisma.postLike.findUnique({
-        where: {
-          postId_userId: {
-            postId,
-            userId: currentUserId,
-          },
-        },
-        select: {
-          postId: true,
-        },
-      }),
-
-      prisma.bookmark.findUnique({
-        where: {
-          postId_userId: {
-            postId,
-            userId: currentUserId,
-          },
-        },
-        select: {
-          postId: true,
-        },
-      }),
-    ]);
-
-    likedByCurrentUser = existingLike !== null;
-    bookmarkedByCurrentUser = existingBookmark !== null;
-  }
-
-  return {
-    id: post.id,
-    title: post.title,
-    content: post.content,
-    viewCount: post.viewCount,
-    createdAt: post.createdAt.toISOString(),
-    updatedAt: post.updatedAt.toISOString(),
-    author: post.author,
-    commentCount: post._count.comments,
-    likeCount: post._count.likes,
-    bookmarkCount: post._count.bookmarks,
-    likedByCurrentUser,
-    bookmarkedByCurrentUser,
-  };
+  return toPostDetail(post, currentUserStatus);
 }
