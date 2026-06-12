@@ -1,12 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { CurrentUser } from "@/types/auth";
 import {
   fetchCurrentUser,
   type CurrentUserResponse,
 } from "@/lib/queries/auth-query";
 import { queryKeys } from "@/lib/query-keys";
+import type { CurrentUser } from "@/types/auth";
 
 export const currentUserQueryKey = queryKeys.auth.currentUser;
 

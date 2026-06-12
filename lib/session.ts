@@ -3,27 +3,16 @@
 import "server-only";
 
 import crypto from "crypto";
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+import { CURRENT_USER_SELECT } from "@/lib/auth-user";
+import { prisma } from "@/lib/prisma";
 
 //쿠키 이름
 export const SESSION_COOKIE_NAME = "assignment1_session";
-// 7일
-const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
-/** SessionPayload 대신 들어온거
- *
- *
- *
- *
- * */
-const USER_SELECT = {
-  id: true,
-  email: true,
-  name: true,
-  createdAt: true,
-} as const;
+// 유통기한
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
 /** 랜덤바이트 토큰 생성 */
 function createRawSessionToken() {
@@ -116,7 +105,7 @@ export async function getSession() {
       expiresAt: true,
       revokedAt: true,
       user: {
-        select: USER_SELECT,
+        select: CURRENT_USER_SELECT,
       },
     },
   });

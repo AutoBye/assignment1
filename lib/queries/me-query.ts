@@ -1,6 +1,6 @@
-import { BookmarkedPostsResponse } from "@/types/post";
-import { CurrentUser } from "@/types/auth";
 import { apiClient } from "@/lib/api/client";
+import type { CurrentUser } from "@/types/auth";
+import type { BookmarkedPostsResponse } from "@/types/post";
 
 export type ProfileUpdateResponse = {
   message?: string;
@@ -12,7 +12,7 @@ export type PasswordChangeResponse = {
 };
 
 export async function fetchBookmarkedPosts() {
-  const data = await apiClient<BookmarkedPostsResponse>(`/api/me/bookmarks`, {
+  const data = await apiClient<BookmarkedPostsResponse>("/api/me/bookmarks", {
     method: "GET",
     errorMessage: "북마크 목록을 가져오지 못했습니다.",
   });
@@ -23,7 +23,7 @@ export async function fetchBookmarkedPosts() {
 }
 
 export async function updateMyProfile(input: { name: string }) {
-  const data = await apiClient<ProfileUpdateResponse>(`/api/me/profile`, {
+  const data = await apiClient<ProfileUpdateResponse>("/api/me/profile", {
     method: "PATCH",
     body: input,
     errorMessage: "프로필 수정에 실패했습니다.",
@@ -43,7 +43,7 @@ export async function updateMyPassword(input: {
   currentPassword: string;
   newPassword: string;
 }) {
-  const data = await apiClient<PasswordChangeResponse>(`/api/me/password`, {
+  const data = await apiClient<PasswordChangeResponse>("/api/me/password", {
     method: "PATCH",
     body: input,
     errorMessage: "비밀번호 변경에 실패했습니다.",

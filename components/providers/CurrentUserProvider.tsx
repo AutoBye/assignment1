@@ -1,8 +1,8 @@
 "use client";
 
-import { CurrentUser } from "@/types/auth";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useCurrentUserQuery } from "@/lib/hooks/use-current-user-query";
+import type { CurrentUser } from "@/types/auth";
 
 type CurrentUserProviderProps = {
   currentUser: CurrentUser | null;

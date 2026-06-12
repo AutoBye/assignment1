@@ -1,26 +1,15 @@
 import "server-only";
 
-import { prisma } from "@/lib/prisma";
+import {
+  CURRENT_USER_SELECT,
+  CURRENT_USER_WITH_PASSWORD_SELECT,
+  toCurrentUser,
+} from "@/lib/auth-user";
 import { hashPassword, verifyPassword } from "@/lib/password";
+import { prisma } from "@/lib/prisma";
+import type { CurrentUser } from "@/types/auth";
 
-export type AuthUser = {
-  id: string;
-  email: string;
-  name: string;
-  createdAt: Date;
-};
-
-const AUTH_USER_SELECT = {
-  id: true,
-  email: true,
-  name: true,
-  createdAt: true,
-} as const;
-
-const AUTH_USER_WITH_PASSWORD_SELECT = {
-  ...AUTH_USER_SELECT,
-  passwordHash: true,
-} as const;
+export type AuthUser = CurrentUser;
 
 export async function loginWithEmailPassword(input: {
   email: string;
@@ -30,7 +19,7 @@ export async function loginWithEmailPassword(input: {
     where: {
       email: input.email,
     },
-    select: AUTH_USER_WITH_PASSWORD_SELECT,
+    select: CURRENT_USER_WITH_PASSWORD_SELECT,
   });
 
   if (!user) {
@@ -56,12 +45,7 @@ export async function loginWithEmailPassword(input: {
 
   return {
     ok: true as const,
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      createdAt: user.createdAt,
-    },
+    user: toCurrentUser(user),
   };
 }
 
@@ -95,11 +79,11 @@ export async function registerWithEmailPassword(input: {
       passwordHash,
       name: input.name,
     },
-    select: AUTH_USER_SELECT,
+    select: CURRENT_USER_SELECT,
   });
 
   return {
     ok: true as const,
-    user,
+    user: toCurrentUser(user),
   };
 }

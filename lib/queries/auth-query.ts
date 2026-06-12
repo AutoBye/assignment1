@@ -1,5 +1,5 @@
-import type { CurrentUser } from "@/types/auth";
 import { apiClient, ApiClientError } from "@/lib/api/client";
+import type { CurrentUser } from "@/types/auth";
 
 export type CurrentUserResponse = {
   message?: string;
@@ -28,7 +28,7 @@ export type LogoutResponse = {
 
 export async function fetchCurrentUser(): Promise<CurrentUserResponse> {
   try {
-    return await apiClient<CurrentUserResponse>(`/api/auth/me`, {
+    return await apiClient<CurrentUserResponse>("/api/auth/me", {
       method: "GET",
       errorMessage: "현재 사용자 정보를 가져오지 못했습니다.",
     });
@@ -44,7 +44,7 @@ export async function fetchCurrentUser(): Promise<CurrentUserResponse> {
 }
 
 export async function loginRequest(input: LoginRequestInput) {
-  const data = await apiClient<AuthUserResponse>(`/api/auth/login`, {
+  const data = await apiClient<AuthUserResponse>("/api/auth/login", {
     method: "POST",
     body: input,
     errorMessage: "로그인에 실패했습니다.",
@@ -61,7 +61,7 @@ export async function loginRequest(input: LoginRequestInput) {
 }
 
 export async function registerRequest(input: RegisterRequestInput) {
-  const data = await apiClient<AuthUserResponse>(`/api/auth/register`, {
+  const data = await apiClient<AuthUserResponse>("/api/auth/register", {
     method: "POST",
     body: input,
     errorMessage: "회원가입에 실패했습니다.",
@@ -78,7 +78,7 @@ export async function registerRequest(input: RegisterRequestInput) {
 }
 
 export async function logoutRequest() {
-  const data = await apiClient<LogoutResponse>(`/api/auth/logout`, {
+  const data = await apiClient<LogoutResponse>("/api/auth/logout", {
     method: "POST",
     errorMessage: "로그아웃에 실패했습니다.",
   });

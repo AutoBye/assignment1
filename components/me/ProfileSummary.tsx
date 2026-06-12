@@ -1,20 +1,16 @@
 "use client";
 
-import { formatDate } from "@/lib/date";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDate } from "@/lib/date";
 import { useCurrentUserQuery } from "@/lib/hooks/use-current-user-query";
+import type { CurrentUser } from "@/types/auth";
 
 type ProfileSummaryProps = {
-  initialUser: {
-    id: string;
-    email: string;
-    name: string;
-    createdAt: Date | string;
-  };
+  initialUser: CurrentUser;
 };
 
 export default function ProfileSummary({ initialUser }: ProfileSummaryProps) {
-  const { data } = useCurrentUserQuery();
+  const { data } = useCurrentUserQuery(initialUser);
   const currentUser = data?.user ?? initialUser;
 
   return (

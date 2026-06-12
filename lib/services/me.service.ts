@@ -1,19 +1,13 @@
 import "server-only";
 
-import { prisma } from "@/lib/prisma";
+import { CURRENT_USER_SELECT, toCurrentUser } from "@/lib/auth-user";
 import { hashPassword, verifyPassword } from "@/lib/password";
+import { prisma } from "@/lib/prisma";
 import { RouteError } from "@/lib/server/route-error";
 import {
   validatePasswordChangeInput,
   validateProfileInput,
 } from "@/lib/validations/user";
-
-const CURRENT_USER_SELECT = {
-  id: true,
-  email: true,
-  name: true,
-  createdAt: true,
-} as const;
 
 export async function updateMyProfile(currentUserId: string, input: unknown) {
   const validation = validateProfileInput(input);
@@ -34,7 +28,7 @@ export async function updateMyProfile(currentUserId: string, input: unknown) {
 
   return {
     message: "프로필이 수정되었습니다.",
-    user,
+    user: toCurrentUser(user),
   };
 }
 
