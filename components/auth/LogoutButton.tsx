@@ -2,36 +2,51 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/api/client";
+import { logoutRequest } from "@/lib/queries/auth-query";
+import { queryKeys } from "@/lib/query-keys";
 import { currentUserQueryKey } from "@/lib/use-current-user";
+import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 
 export default function LogoutButton() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
 
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleLogout() {
+    if (isLoading) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const response = await fetch(`/api/auth/logout`, {
-        method: "POST",
+      await logoutRequest();
+
+      queryClient.setQueryData(currentUserQueryKey, {
+        user: null,
       });
 
-      if (!response.ok) {
-        alert("로그아웃에 실패했습니다.");
-        return;
-      }
+      queryClient.removeQueries({
+        queryKey: queryKeys.me.all,
+        exact: false,
+      });
 
       queryClient.removeQueries({
-        queryKey: currentUserQueryKey,
+        queryKey: queryKeys.comments.all,
+        exact: false,
       });
 
       router.replace("/");
-    } catch {
-      alert("로그아웃 요청 중 오류가 발생했습니다.");
+      router.refresh();
+    } catch (error) {
+      openErrorModal(
+        getErrorMessage(error, "로그아웃 요청 중 오류가 발생했습니다."),
+      );
     } finally {
       setIsLoading(false);
     }
