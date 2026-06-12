@@ -1,5 +1,3 @@
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import BoardIntroSection from "@/components/home/BoardIntroSection";
 import PopularPostsSection from "@/components/home/PopularPostsSection";
 import RecentPostsSection from "@/components/home/RecentPostsSection";
@@ -8,7 +6,6 @@ import {
   getRecentPosts,
 } from "@/lib/services/post-read.service";
 
-// 서버 컴포넌트임
 export default async function Home() {
   // 서버 컴포넌트라서 서버에서 쿠키를 읽고 DB 조회 가능
 
@@ -18,14 +15,10 @@ export default async function Home() {
   const recentPosts = await getRecentPosts();
 
   return (
-    <div className="min-h-screen bg-muted/40">
-      <Header />
-      <main className="mx-auto max-w-4xl p-4">
-        <BoardIntroSection />
-        <PopularPostsSection posts={popularPosts} />
-        <RecentPostsSection posts={recentPosts} />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <BoardIntroSection />
+      <PopularPostsSection posts={popularPosts} />
+      <RecentPostsSection posts={recentPosts} />
+    </>
   );
 }

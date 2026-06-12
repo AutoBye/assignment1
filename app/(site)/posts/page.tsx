@@ -1,5 +1,3 @@
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import PostList from "@/components/post/PostList";
 import { getPositivePageNumber } from "@/lib/validators";
 import { getPosts } from "@/lib/services/post-read.service";
@@ -24,19 +22,12 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
   );
 
   return (
-    <div className="min-h-screen bg-muted/40">
-      <Header />
-
-      <main className="mx-auto max-w-4xl p-4">
-        <PostList
-          posts={posts}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalPostCount={totalPostCount}
-          query={query}
-        />
-      </main>
-      <Footer />
-    </div>
+    <PostList
+      posts={posts}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      totalPostCount={totalPostCount}
+      query={query}
+    />
   );
 }
