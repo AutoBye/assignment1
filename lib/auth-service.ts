@@ -1,3 +1,5 @@
+import "server-only";
+
 import { prisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/lib/password";
 
@@ -15,6 +17,11 @@ const AUTH_USER_SELECT = {
   createdAt: true,
 } as const;
 
+const AUTH_USER_WITH_PASSWORD_SELECT = {
+  ...AUTH_USER_SELECT,
+  passwordHash: true,
+} as const;
+
 export async function loginWithEmailPassword(input: {
   email: string;
   password: string;
@@ -23,6 +30,7 @@ export async function loginWithEmailPassword(input: {
     where: {
       email: input.email,
     },
+    select: AUTH_USER_WITH_PASSWORD_SELECT,
   });
 
   if (!user) {
@@ -34,8 +42,8 @@ export async function loginWithEmailPassword(input: {
   }
 
   const isValidPassword = await verifyPassword(
-    input.password,
-    user.passwordHash,
+      input.password,
+      user.passwordHash,
   );
 
   if (!isValidPassword) {
@@ -50,7 +58,6 @@ export async function loginWithEmailPassword(input: {
     ok: true as const,
     user: {
       id: user.id,
-      user: user.id,
       email: user.email,
       name: user.name,
       createdAt: user.createdAt,
@@ -66,6 +73,9 @@ export async function registerWithEmailPassword(input: {
   const existingUser = await prisma.user.findUnique({
     where: {
       email: input.email,
+    },
+    select: {
+      id: true,
     },
   });
 

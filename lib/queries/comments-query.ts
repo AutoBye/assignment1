@@ -6,6 +6,7 @@ import type {
   DeleteCommentResponse,
   UpdateCommentResponse,
 } from "@/types/comment";
+import { apiClient } from "@/lib/api/client";
 
 type FetchCommentsResult = {
   comments: CommentItem[];
@@ -28,16 +29,17 @@ type UpdateCommentRequestParams = {
  * @param postId - string
  * @param page - number
  * */
-export async function fetchComments(postId: string, page: number) : Promise<FetchCommentsResult> {
-  const response = await fetch(`/api/posts/${postId}/comments?page=${page}`, {
-    method: "GET",
-  });
-
-  const data = (await response.json()) as CommentsResponse;
-
-  if (!response.ok) {
-    throw new Error(data.message ?? "댓글 조회에 실패했습니다.");
-  }
+export async function fetchComments(
+  postId: string,
+  page: number,
+): Promise<FetchCommentsResult> {
+  const data = await apiClient<CommentsResponse>(
+    `/api/posts/${postId}/comments?page=${page}`,
+    {
+      method: "GET",
+      errorMessage: "댓글 조회에 실패했습니다.",
+    },
+  );
 
   if (!data.comments || !data.pagination) {
     throw new Error("댓글 조회 응답이 올바르지 않습니다.");
@@ -53,29 +55,24 @@ export async function fetchComments(postId: string, page: number) : Promise<Fetc
  * <br> use comment 에서 분리됨
  * @param postId - string
  * @param content - string
- * @param parentId - string
+ * @param parentId - string | undefined
  * */
 export async function createCommentRequest({
   postId,
   content,
   parentId,
 }: CreateCommentRequestParams) {
-  const response = await fetch(`/api/posts/${postId}/comments`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  const data = await apiClient<CreateCommentResponse>(
+    `/api/posts/${postId}/comments`,
+    {
+      method: "POST",
+      body: {
+        content,
+        parentId,
+      },
+      errorMessage: "댓글 작성에 실패했습니다.",
     },
-    body: JSON.stringify({
-      content,
-      parentId,
-    }),
-  });
-
-  const data = (await response.json()) as CreateCommentResponse;
-
-  if (!response.ok) {
-    throw new Error(data.message ?? "댓글 작성에 실패했습니다.");
-  }
+  );
 
   if (!data.comment) {
     throw new Error("댓글 작성 응답이 올바르지 않습니다.");
@@ -93,21 +90,16 @@ export async function updateCommentRequest({
   commentId,
   content,
 }: UpdateCommentRequestParams) {
-  const response = await fetch(`/api/comments/${commentId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
+  const data = await apiClient<UpdateCommentResponse>(
+    `/api/comments/${commentId}`,
+    {
+      method: "PATCH",
+      body: {
+        content,
+      },
+      errorMessage: "댓글 수정에 실패했습니다.",
     },
-    body: JSON.stringify({
-      content,
-    }),
-  });
-
-  const data = (await response.json()) as UpdateCommentResponse;
-
-  if (!response.ok) {
-    throw new Error(data.message ?? "댓글 수정에 실패했습니다.");
-  }
+  );
 
   if (!data.comment) {
     throw new Error("댓글 수정 응답이 올바르지 않습니다.");
@@ -121,15 +113,8 @@ export async function updateCommentRequest({
  * @param commentId - string
  * */
 export async function deleteCommentRequest(commentId: string) {
-  const response = await fetch(`/api/comments/${commentId}`, {
+  return apiClient<DeleteCommentResponse>(`/api/comments/${commentId}`, {
     method: "DELETE",
+    errorMessage: "댓글 삭제에 실패했습니다.",
   });
-
-  const data = (await response.json()) as DeleteCommentResponse;
-
-  if (!response.ok) {
-    throw new Error(data.message ?? "댓글 삭제에 실패했습니다.");
-  }
-
-  return data;
 }

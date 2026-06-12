@@ -1,42 +1,30 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
-import type { CurrentUser } from "@/types/auth";
-
-type CurrentUserContextValue = {
-  currentUser: CurrentUser | null;
-  isLoggedIn: boolean;
-};
-
-const CurrentUserContext = createContext<CurrentUserContextValue | null>(null);
+import {CurrentUser} from "@/types/auth";
+import {ReactNode} from "react";
+import {useCurrentUserQuery} from "@/lib/hooks/use-current-user-query";
 
 type CurrentUserProviderProps = {
   currentUser: CurrentUser | null;
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 export function CurrentUserProvider({
-  currentUser,
-  children,
+    currentUser,
+    children,
 }: CurrentUserProviderProps) {
-  return (
-    <CurrentUserContext.Provider
-      value={{
-        currentUser,
-        isLoggedIn: currentUser !== null,
-      }}
-    >
-      {children}
-    </CurrentUserContext.Provider>
-  );
+  useCurrentUserQuery(currentUser);
+
+  return <>{children}</>
 }
 
-export function useCurrentUser() {
-  const context = useContext(CurrentUserContext);
+export function useCurrentUser(initialUser?: CurrentUser | null) {
+  const query = useCurrentUserQuery(initialUser);
+  const currentUser = query.data?.user ?? null;
 
-  if (!context) {
-    throw new Error("useCurrentUser must be used inside CurrentUserProvider!");
-  }
-
-  return context;
+  return {
+    ...query,
+    currentUser,
+    isLoggedIn: currentUser !== null,
+  };
 }
