@@ -20,6 +20,7 @@ import type { CommentItem } from "@/types/comment";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import { useConfirmModalStore } from "@/lib/stores/confirm-modal-store";
 import { useToastStore } from "@/lib/stores/toast-store";
+import {queryKeys} from "@/lib/query-keys";
 
 type UseCommentsParams = {
   postId: string;
@@ -145,7 +146,7 @@ export function useComments({
   });
 
   const commentsQuery = useQuery({
-    queryKey: ["comments", postId, paginationState.currentPage],
+    queryKey: queryKeys.comments.list(postId, paginationState.currentPage),
     queryFn: () => fetchComments(postId, paginationState.currentPage),
     initialData: {
       comments: initialComments,
@@ -221,7 +222,7 @@ export function useComments({
 
   async function invalidateComments() {
     await queryClient.invalidateQueries({
-      queryKey: ["comments", postId],
+      queryKey: queryKeys.comments.post(postId),
     });
   }
 

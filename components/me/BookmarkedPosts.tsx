@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookmarkedPostsResponse } from "@/types/post";
+import type { BookmarkedPostsResponse } from "@/types/post";
 import { useQuery } from "@tanstack/react-query";
-import {formatDate} from "@/lib/date";
-import {meBookmarksQueryKey} from "@/lib/queries/bookmark-query";
+import { formatDate } from "@/lib/date";
+import { queryKeys } from "@/lib/query-keys";
 
 async function fetchBookmarkedPosts() {
   const response = await fetch(`/api/me/bookmarks`, {
@@ -25,7 +25,7 @@ async function fetchBookmarkedPosts() {
 
 export default function BookmarkedPosts() {
   const { data, isLoading, isError } = useQuery({
-    queryKey: meBookmarksQueryKey,
+    queryKey: queryKeys.me.bookmarks,
     queryFn: fetchBookmarkedPosts,
   });
 

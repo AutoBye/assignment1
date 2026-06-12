@@ -2,12 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { fetchCurrentUser } from "@/lib/queries/auth-query";
+import { queryKeys } from "@/lib/query-keys";
 
-export const currentUserQueryKey = ["auth", "currentUser"] as const;
+export const currentUserQueryKey = queryKeys.auth.currentUser;
 
 export function useCurrentUserQuery() {
 	return useQuery({
-		queryKey: currentUserQueryKey,
+		queryKey: queryKeys.auth.currentUser,
 		queryFn: fetchCurrentUser,
 		staleTime: 1000 * 60,
 		retry: false,
