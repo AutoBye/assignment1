@@ -1,7 +1,7 @@
 // Next.js는 "use client" 파일의 props가 Server Component에서 Client Component로 넘어올 수 있다고 보고, props가 직렬화 가능해야 한다고 검사함
 // 함수는 직렬화할 수 없기 때문에 TS71007이 발생
 import type { SubmitEventHandler } from "react";
-import { useComments } from "@/lib/use-comments";
+import { useComments } from "@/lib/hooks/use-comments";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { CommentPaginationResponse } from "@/types/api";

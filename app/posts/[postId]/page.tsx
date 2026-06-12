@@ -27,7 +27,9 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
 
   const [post, commentsResult] = await Promise.all([
     getPostDetail(postId, currentUser?.id),
-    getCommentsByPostId(postId, 1),
+    getCommentsByPostId(postId, 1, {
+      notFoundBehavior: "empty",
+    }),
   ]);
 
   return (

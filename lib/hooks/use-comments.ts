@@ -21,6 +21,7 @@ import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import { useConfirmModalStore } from "@/lib/stores/confirm-modal-store";
 import { useToastStore } from "@/lib/stores/toast-store";
 import {queryKeys} from "@/lib/query-keys";
+import {getErrorMessage} from "@/lib/api/client";
 
 type UseCommentsParams = {
   postId: string;
@@ -82,12 +83,6 @@ function validateCommentContent(content: string, emptyMessage: string) {
     content: trimmedContent,
     message: "",
   };
-}
-
-// useMutation의 onError에서 밑에처럼 쓰기 위한거.
-// error가 Error 객체면 error.message를 쓰고, 아니면 fallback 메시지를 쓰는 유틸 함수
-function getErrorMessage(error: unknown, fallbackMessage: string) {
-  return error instanceof Error ? error.message : fallbackMessage;
 }
 
 function getDeleteCount(comments: CommentItem[], commentId: string) {
