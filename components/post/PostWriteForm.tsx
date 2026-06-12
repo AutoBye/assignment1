@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { SubmitEventHandler } from "react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   POST_CONTENT_MIN_LENGTH,
   POST_TITLE_MAX_LENGTH,
@@ -13,8 +13,7 @@ import { getErrorMessage } from "@/lib/api/client";
 import { createPostRequest } from "@/lib/requests/createPostRequest";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import PostFormFields from "@/components/post/form/PostFormFields";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import { usePostDraftStore } from "@/lib/stores/post-draft-store";
 import { useToastStore } from "@/lib/stores/toast-store";
@@ -31,6 +30,20 @@ export default function PostWriteForm() {
 
   const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
   const showToast = useToastStore((state) => state.showToast);
+
+  const handleTitleChange = useCallback(
+    (nextTitle: string) => {
+      setTitle(nextTitle);
+    },
+    [setTitle],
+  );
+
+  const handleContentChange = useCallback(
+    (nextContent: string) => {
+      setContent(nextContent);
+    },
+    [setContent],
+  );
 
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
@@ -99,44 +112,12 @@ export default function PostWriteForm() {
 
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="title" className="mb-1 block text-sm font-medium">
-              제목
-            </label>
-
-            <Input
-              id="title"
-              type="text"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="게시글 제목을 입력하세요"
-              minLength={POST_TITLE_MIN_LENGTH}
-              maxLength={POST_TITLE_MAX_LENGTH}
-            />
-
-            <p className="mt-1 text-xs text-muted-foreground">
-              제목은 {POST_TITLE_MIN_LENGTH}자 이상 {POST_TITLE_MAX_LENGTH}자
-              이하로 입력해주세요.
-            </p>
-          </div>
-
-          <div>
-            <label htmlFor="content" className="mb-1 block text-sm font-medium">
-              내용
-            </label>
-
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              className="min-h-60 resize-y"
-              placeholder="게시글 내용을 입력하세요"
-            />
-
-            <p className="mt-1 text-xs text-muted-foreground">
-              내용은 {POST_CONTENT_MIN_LENGTH}자 이상 입력해주세요.
-            </p>
-          </div>
+          <PostFormFields
+            title={title}
+            content={content}
+            onTitleChange={handleTitleChange}
+            onContentChange={handleContentChange}
+          />
 
           <div className="flex gap-2">
             <Button type="submit" disabled={isLoading}>

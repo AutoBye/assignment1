@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { SubmitEventHandler } from "react";
 import {
   POST_CONTENT_MIN_LENGTH,
@@ -23,9 +23,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import PostFormFields from "@/components/post/form/PostFormFields";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import { useToastStore } from "@/lib/stores/toast-store";
@@ -59,6 +58,20 @@ export default function PostEditForm({ postId }: PostEditFormProps) {
 
   const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
   const showToast = useToastStore((state) => state.showToast);
+
+  const handleTitleChange = useCallback((title: string) => {
+    setFormState((currentState) => ({
+      ...currentState,
+      title,
+    }));
+  }, []);
+
+  const handleContentChange = useCallback((content: string) => {
+    setFormState((currentState) => ({
+      ...currentState,
+      content,
+    }));
+  }, []);
 
   useEffect(() => {
     if (isCurrentUserLoading) {
@@ -239,54 +252,12 @@ export default function PostEditForm({ postId }: PostEditFormProps) {
 
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="title" className="mb-1 block text-sm font-medium">
-              제목
-            </label>
-
-            <Input
-              id="title"
-              type="text"
-              value={formState.title}
-              onChange={(event) =>
-                setFormState((currentState) => ({
-                  ...currentState,
-                  title: event.target.value,
-                }))
-              }
-              placeholder="게시글 제목을 입력하세요."
-              minLength={POST_TITLE_MIN_LENGTH}
-              maxLength={POST_TITLE_MAX_LENGTH}
-            />
-
-            <p className="mt-1 text-xs text-muted-foreground">
-              제목은 {POST_TITLE_MIN_LENGTH}자 이상 {POST_TITLE_MAX_LENGTH}자
-              이하로 입력해주세요.
-            </p>
-          </div>
-
-          <div>
-            <label htmlFor="content" className="mb-1 block text-sm font-medium">
-              내용
-            </label>
-
-            <Textarea
-              id="content"
-              value={formState.content}
-              onChange={(event) =>
-                setFormState((currentState) => ({
-                  ...currentState,
-                  content: event.target.value,
-                }))
-              }
-              className="min-h-60 resize-y"
-              placeholder="게시글 내용을 입력하세요."
-            />
-
-            <p className="mt-1 text-xs text-muted-foreground">
-              내용은 {POST_CONTENT_MIN_LENGTH}자 이상 입력해주세요.
-            </p>
-          </div>
+          <PostFormFields
+            title={formState.title}
+            content={formState.content}
+            onTitleChange={handleTitleChange}
+            onContentChange={handleContentChange}
+          />
 
           {formState.message && (
             <Alert variant="destructive">
