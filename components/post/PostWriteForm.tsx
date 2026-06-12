@@ -2,8 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import type { SubmitEventHandler } from "react";
+import { useState } from "react";
+import {
+  POST_CONTENT_MIN_LENGTH,
+  POST_TITLE_MAX_LENGTH,
+  POST_TITLE_MIN_LENGTH,
+} from "@/lib/constants";
+import { getErrorMessage } from "@/lib/api/client";
+import { createPostRequest } from "@/lib/queries/posts-query";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,16 +19,8 @@ import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import { usePostDraftStore } from "@/lib/stores/post-draft-store";
 import { useToastStore } from "@/lib/stores/toast-store";
 
-type CreatePostResponse = {
-  message?: string;
-  post?: {
-    id: string;
-  };
-};
-
 export default function PostWriteForm() {
   const router = useRouter();
-
   const [isLoading, setIsLoading] = useState(false);
 
   const title = usePostDraftStore((state) => state.title);
@@ -39,55 +38,47 @@ export default function PostWriteForm() {
     const trimmedTitle = title.trim();
     const trimmedContent = content.trim();
 
-    if (!trimmedTitle) {
-      openErrorModal("제목을 입력해주세요.");
+    if (!trimmedTitle || !trimmedContent) {
+      openErrorModal("제목과 내용을 모두 입력해주세요.");
       return;
     }
 
-    if (!trimmedContent) {
-      openErrorModal("내용을 입력해주세요.");
+    if (
+      trimmedTitle.length < POST_TITLE_MIN_LENGTH ||
+      trimmedTitle.length > POST_TITLE_MAX_LENGTH
+    ) {
+      openErrorModal(
+        `제목은 ${POST_TITLE_MIN_LENGTH}자 이상 ${POST_TITLE_MAX_LENGTH}자 이하로 입력해주세요.`,
+      );
+      return;
+    }
+
+    if (trimmedContent.length < POST_CONTENT_MIN_LENGTH) {
+      openErrorModal(`내용은 ${POST_CONTENT_MIN_LENGTH}자 이상 입력해주세요.`);
       return;
     }
 
     setIsLoading(true);
 
-    // DONE - 글 작성 후 게시글 상세 페이지로 이동
-    // 현재는 메인 페이지로 이동
     try {
-      const response = await fetch(`/api/posts`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: trimmedTitle,
-          content: trimmedContent,
-        }),
+      const data = await createPostRequest({
+        title: trimmedTitle,
+        content: trimmedContent,
       });
-
-      const data = (await response.json()) as CreatePostResponse;
-
-      if (!response.ok) {
-        openErrorModal(data.message ?? "게시글 작성에 실패했습니다.");
-        return;
-      }
-
-      if (!data.post) {
-        openErrorModal("게시글 작성 응답이 올바르지 않습니다.");
-        return;
-      }
 
       resetDraft();
 
       showToast({
         type: "success",
-        message: "게시글이 작성되었습니다.",
+        message: data.message,
       });
 
       router.replace(`/posts/${data.post.id}`);
       router.refresh();
-    } catch {
-      openErrorModal("게시글 작성 요청 중 오류가 발생했습니다.");
+    } catch (error) {
+      openErrorModal(
+        getErrorMessage(error, "게시글 작성 요청 중 오류가 발생했습니다."),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -119,10 +110,13 @@ export default function PostWriteForm() {
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="게시글 제목을 입력하세요"
+              minLength={POST_TITLE_MIN_LENGTH}
+              maxLength={POST_TITLE_MAX_LENGTH}
             />
 
             <p className="mt-1 text-xs text-muted-foreground">
-              제목은 2자 이상 200자 이하로 입력해주세요.
+              제목은 {POST_TITLE_MIN_LENGTH}자 이상 {POST_TITLE_MAX_LENGTH}자
+              이하로 입력해주세요.
             </p>
           </div>
 
@@ -140,7 +134,7 @@ export default function PostWriteForm() {
             />
 
             <p className="mt-1 text-xs text-muted-foreground">
-              내용은 2자 이상 입력해주세요.
+              내용은 {POST_CONTENT_MIN_LENGTH}자 이상 입력해주세요.
             </p>
           </div>
 
@@ -149,7 +143,10 @@ export default function PostWriteForm() {
               {isLoading ? "작성 중..." : "작성하기"}
             </Button>
 
-            <Link href="/" className={buttonVariants({ variant: "outline" })}>
+            <Link
+              href="/posts"
+              className={buttonVariants({ variant: "outline" })}
+            >
               취소
             </Link>
           </div>

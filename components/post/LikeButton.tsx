@@ -1,15 +1,18 @@
+"use client";
+
 import { useState } from "react";
-import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 import { Button } from "@/components/ui/button";
+import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
+import { getErrorMessage } from "@/lib/api/client";
+import { togglePostLikeRequest } from "@/lib/queries/posts-query";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
-import {togglePostLike} from "@/lib/queries/post-action-query";
 
 type LikeButtonProps = {
   postId: string;
   liked: boolean;
   likeCount: number;
   isOwnPost: boolean;
-  onLikeChange?: (likeCount: number, liked: boolean) => void;
+  onLikeChangeAction?: (likeCount: number, liked: boolean) => void;
 };
 
 export default function LikeButton({
@@ -17,16 +20,17 @@ export default function LikeButton({
   liked,
   likeCount,
   isOwnPost,
-  onLikeChange,
+  onLikeChangeAction,
 }: LikeButtonProps) {
-  // liked와 likeCount는 부모 상태를 기준으로 렌더링한다.
   const [isLoading, setIsLoading] = useState(false);
-  const { isLoggedIn } = useCurrentUser();
-  // selector을 쓴다.
-  // store 전체를 구독하면 불필요한 리렌더링이 늘어남
+  const { isLoggedIn, isLoading: isCurrentUserLoading } = useCurrentUser();
   const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
 
   async function handleClick() {
+    if (isCurrentUserLoading) {
+      return;
+    }
+
     if (!isLoggedIn) {
       openErrorModal("좋아요를 누르려면 로그인이 필요합니다.");
       return;
@@ -40,35 +44,34 @@ export default function LikeButton({
     setIsLoading(true);
 
     try {
-      const data = await togglePostLike(postId);
-
-      onLikeChange?.(data.likeCount, data.liked);
-    } catch {
-      openErrorModal("좋아요 요청 중 오류가 발생했습니다.");
+      const data = await togglePostLikeRequest(postId);
+      onLikeChangeAction?.(data.likeCount, data.liked);
+    } catch (error) {
+      openErrorModal(
+        getErrorMessage(error, "좋아요 요청 중 오류가 발생했습니다."),
+      );
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="space-y-2">
-      <Button
-        type="button"
-        onClick={handleClick}
-        disabled={isLoading}
-        variant="outline"
-        className={
-          liked
-            ? "border-primary/50 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
-            : "hover:border-primary/40 hover:bg-primary/5"
-        }
-      >
-        {isLoading
-          ? "처리 중..."
-          : liked
-            ? `좋아요 취소 ${likeCount}`
-            : `좋아요 ${likeCount}`}
-      </Button>
-    </div>
+    <Button
+      type="button"
+      onClick={handleClick}
+      disabled={isLoading || isCurrentUserLoading}
+      variant="outline"
+      className={
+        liked
+          ? "border-primary/50 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+          : "hover:border-primary/40 hover:bg-primary/5"
+      }
+    >
+      {isLoading
+        ? "처리 중..."
+        : liked
+          ? `좋아요 취소 ${likeCount}`
+          : `좋아요 ${likeCount}`}
+    </Button>
   );
 }

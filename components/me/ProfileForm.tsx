@@ -1,15 +1,20 @@
 "use client";
 
-import { SubmitEventHandler, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CurrentUser } from "@/types/auth";
+import { useState } from "react";
+import type { SubmitEventHandler } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import type { CurrentUser } from "@/types/auth";
+import { getErrorMessage } from "@/lib/api/client";
+import {
+  currentUserQueryKey,
+  useCurrentUserQuery,
+} from "@/lib/use-current-user";
+import { updateMyProfile } from "@/lib/queries/me-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import { useToastStore } from "@/lib/stores/toast-store";
-import {currentUserQueryKey, useCurrentUserQuery} from "@/lib/use-current-user";
-import { updateMyProfile } from "@/lib/queries/me-query";
 
 type ProfileFormProps = {
   initialUser: CurrentUser;
@@ -20,7 +25,7 @@ export default function ProfileForm({ initialUser }: ProfileFormProps) {
   const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
   const showToast = useToastStore((state) => state.showToast);
 
-  const { data: currentUserData } = useCurrentUserQuery();
+  const { data: currentUserData } = useCurrentUserQuery(initialUser);
   const latestUser = currentUserData?.user ?? initialUser;
 
   const [name, setName] = useState(latestUser.name);
@@ -45,6 +50,7 @@ export default function ProfileForm({ initialUser }: ProfileFormProps) {
     }
 
     setIsLoading(true);
+
     try {
       const data = await updateMyProfile({
         name: trimmedName,
@@ -60,8 +66,10 @@ export default function ProfileForm({ initialUser }: ProfileFormProps) {
         type: "success",
         message: data.message,
       });
-    } catch {
-      openErrorModal("프로필 수정 요청 중 오류가 발생했습니다.");
+    } catch (error) {
+      openErrorModal(
+        getErrorMessage(error, "프로필 수정 요청 중 오류가 발생했습니다."),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -79,6 +87,7 @@ export default function ProfileForm({ initialUser }: ProfileFormProps) {
             <label htmlFor="name" className="mb-1 block text-sm font-medium">
               이름
             </label>
+
             <Input
               id="name"
               value={name}

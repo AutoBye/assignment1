@@ -1,12 +1,14 @@
 "use client";
 
-import { SubmitEventHandler, useState } from "react";
+import { useState } from "react";
+import type { SubmitEventHandler } from "react";
+import { getErrorMessage } from "@/lib/api/client";
+import { updateMyPassword } from "@/lib/queries/me-query";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {useErrorModalStore} from "@/lib/stores/error-modal-store";
-import {useToastStore} from "@/lib/stores/toast-store";
-import {updateMyPassword} from "@/lib/queries/me-query";
+import { Input } from "@/components/ui/input";
+import { useErrorModalStore } from "@/lib/stores/error-modal-store";
+import { useToastStore } from "@/lib/stores/toast-store";
 
 export default function PasswordChangeForm() {
   const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
@@ -35,6 +37,7 @@ export default function PasswordChangeForm() {
     }
 
     setIsLoading(true);
+
     try {
       const data = await updateMyPassword({
         currentPassword,
@@ -48,8 +51,10 @@ export default function PasswordChangeForm() {
 
       setCurrentPassword("");
       setNewPassword("");
-    } catch {
-      openErrorModal("비밀번호 변경 요청 중 오류가 발생했습니다.");
+    } catch (error) {
+      openErrorModal(
+        getErrorMessage(error, "비밀번호 변경 요청 중 오류가 발생했습니다."),
+      );
     } finally {
       setIsLoading(false);
     }

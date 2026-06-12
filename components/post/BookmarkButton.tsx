@@ -1,31 +1,38 @@
+"use client";
+
 import { useState } from "react";
 import { Bookmark } from "lucide-react";
-import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
-import { Button } from "@/components/ui/button";
-import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
+import { getErrorMessage } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query-keys";
-import { togglePostBookmark } from "@/lib/queries/post-action-query";
+import { togglePostBookmarkRequest } from "@/lib/queries/posts-query";
+import { useErrorModalStore } from "@/lib/stores/error-modal-store";
 
 type BookmarkButtonProps = {
   postId: string;
   bookmarked: boolean;
   bookmarkCount: number;
-  onBookmarkChange?: (bookmarkCount: number, bookmarked: boolean) => void;
+  onBookmarkChangeAction?: (bookmarkCount: number, bookmarked: boolean) => void;
 };
 
 export default function BookmarkButton({
   postId,
   bookmarked,
   bookmarkCount,
-  onBookmarkChange,
+  onBookmarkChangeAction,
 }: BookmarkButtonProps) {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
-  const { isLoggedIn } = useCurrentUser();
+  const { isLoggedIn, isLoading: isCurrentUserLoading } = useCurrentUser();
   const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
 
   async function handleClick() {
+    if (isCurrentUserLoading) {
+      return;
+    }
+
     if (!isLoggedIn) {
       openErrorModal("북마크를 사용하려면 로그인이 필요합니다.");
       return;
@@ -34,15 +41,17 @@ export default function BookmarkButton({
     setIsLoading(true);
 
     try {
-      const data = await togglePostBookmark(postId);
+      const data = await togglePostBookmarkRequest(postId);
 
-      onBookmarkChange?.(data.bookmarkCount, data.bookmarked);
+      onBookmarkChangeAction?.(data.bookmarkCount, data.bookmarked);
 
       await queryClient.invalidateQueries({
         queryKey: queryKeys.me.bookmarks,
       });
-    } catch {
-      openErrorModal("북마크 요청 중 오류가 발생했습니다.");
+    } catch (error) {
+      openErrorModal(
+        getErrorMessage(error, "북마크 요청 중 오류가 발생했습니다."),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +61,7 @@ export default function BookmarkButton({
     <Button
       type="button"
       onClick={handleClick}
-      disabled={isLoading}
+      disabled={isLoading || isCurrentUserLoading}
       variant="outline"
       className={
         bookmarked

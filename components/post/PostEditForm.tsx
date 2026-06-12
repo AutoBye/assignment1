@@ -4,7 +4,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { SubmitEventHandler } from "react";
-import type { PostDetailResponse, UpdatePostResponse } from "@/types/post";
+import {
+  POST_CONTENT_MIN_LENGTH,
+  POST_TITLE_MAX_LENGTH,
+  POST_TITLE_MIN_LENGTH,
+} from "@/lib/constants";
+import { getErrorMessage } from "@/lib/api/client";
+import {
+  fetchPostDetailRequest,
+  updatePostRequest,
+} from "@/lib/queries/posts-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -36,84 +45,56 @@ type PostEditFormState = {
 
 export default function PostEditForm({ postId }: PostEditFormProps) {
   const router = useRouter();
-
-  const { currentUser } = useCurrentUser();
+  const { currentUser, isLoading: isCurrentUserLoading } = useCurrentUser();
   const currentUserId = currentUser?.id;
 
   const [formState, setFormState] = useState<PostEditFormState>({
     title: "",
     content: "",
     message: "",
-    isLoading: false,
+    isLoading: true,
     isSubmitting: false,
     isAuthor: false,
   });
 
   const openErrorModal = useErrorModalStore((state) => state.openErrorModal);
   const showToast = useToastStore((state) => state.showToast);
-  // console.log("PostEditForm render", {
-  //   postId,
-  //   currentUserId: currentUser.id,
-  //   ...formState,
-  // });
 
-  // 1. useState 변경으로 인한 렌더링
-  // 2. useEffect 실행 시점
-  // 3. cleanup 함수 실행 시점
   useEffect(() => {
+    if (isCurrentUserLoading) {
+      return;
+    }
+
     if (!currentUserId) {
+      setFormState((currentState) => ({
+        ...currentState,
+        message: "로그인이 필요합니다.",
+        isLoading: false,
+        isAuthor: false,
+      }));
       return;
     }
 
     const abortController = new AbortController();
 
-    async function fetchPost() {
+    async function loadPost() {
+      setFormState((currentState) => ({
+        ...currentState,
+        message: "",
+        isLoading: true,
+      }));
+
       try {
-        setFormState((currentState) => ({
-          ...currentState,
-          message: "",
-          isLoading: true,
-        }));
+        const post = await fetchPostDetailRequest(
+          postId,
+          abortController.signal,
+        );
 
-        const response = await fetch(`/api/posts/${postId}`, {
-          method: "GET",
-          signal: abortController.signal,
-        });
-
-        const data = (await response.json()) as PostDetailResponse;
-
-        // console.log("fetchPost response", {
-        //   ok: response.ok,
-        //   postId: data.post?.id,
-        //   authorId: data.post?.author.id,
-        // });
-
-        // 응답 X
-        if (!response.ok) {
-          setFormState((currentState) => ({
-            ...currentState,
-            message: data.message ?? "게시글 조회에 실패했습니다.",
-            isAuthor: false,
-          }));
-          return;
-        }
-
-        // 포스트 찾기
-        if (!data.post) {
-          setFormState((currentState) => ({
-            ...currentState,
-            message: "게시글 응답이 올바르지 않습니다.",
-            isAuthor: false,
-          }));
-          return;
-        }
-
-        // 자기가 쓴 글인가
-        const post = data.post;
         if (post.author.id !== currentUserId) {
           setFormState((currentState) => ({
             ...currentState,
             message: "게시글을 수정할 권한이 없습니다.",
+            isLoading: false,
             isAuthor: false,
           }));
           return;
@@ -124,6 +105,7 @@ export default function PostEditForm({ postId }: PostEditFormProps) {
           title: post.title,
           content: post.content,
           message: "",
+          isLoading: false,
           isAuthor: true,
         }));
       } catch (error) {
@@ -133,30 +115,48 @@ export default function PostEditForm({ postId }: PostEditFormProps) {
 
         setFormState((currentState) => ({
           ...currentState,
-          message: "게시글 조회 요청 중 오류가 발생했습니다.",
+          message: getErrorMessage(
+            error,
+            "게시글 조회 요청 중 오류가 발생했습니다.",
+          ),
+          isLoading: false,
           isAuthor: false,
         }));
-      } finally {
-        if (!abortController.signal.aborted) {
-          setFormState((currentState) => ({
-            ...currentState,
-            isLoading: false,
-          }));
-        }
       }
     }
 
-    void fetchPost();
+    void loadPost();
 
     return () => {
-      console.log("PostEditForm effect cleanup");
       abortController.abort();
     };
-  }, [postId, currentUserId]);
+  }, [postId, currentUserId, isCurrentUserLoading]);
 
-  // 수정 핸들러
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
+
+    const title = formState.title.trim();
+    const content = formState.content.trim();
+
+    if (!title || !content) {
+      openErrorModal("제목과 내용을 모두 입력해주세요.");
+      return;
+    }
+
+    if (
+      title.length < POST_TITLE_MIN_LENGTH ||
+      title.length > POST_TITLE_MAX_LENGTH
+    ) {
+      openErrorModal(
+        `제목은 ${POST_TITLE_MIN_LENGTH}자 이상 ${POST_TITLE_MAX_LENGTH}자 이하로 입력해주세요.`,
+      );
+      return;
+    }
+
+    if (content.length < POST_CONTENT_MIN_LENGTH) {
+      openErrorModal(`내용은 ${POST_CONTENT_MIN_LENGTH}자 이상 입력해주세요.`);
+      return;
+    }
 
     setFormState((currentState) => ({
       ...currentState,
@@ -165,42 +165,22 @@ export default function PostEditForm({ postId }: PostEditFormProps) {
     }));
 
     try {
-      const response = await fetch(`/api/posts/${postId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: formState.title,
-          content: formState.content,
-        }),
+      const data = await updatePostRequest(postId, {
+        title,
+        content,
       });
-
-      const data = (await response.json()) as UpdatePostResponse;
-
-      // 반응 X
-      if (!response.ok) {
-        openErrorModal(data.message ?? "게시글 수정에 실패했습니다.");
-        return;
-      }
-
-      // 응답 정상 X
-      if (!data.post) {
-        openErrorModal("게시글 수정 응답이 올바르지 않습니다.");
-        return;
-      }
-
-      const updatedPost = data.post;
 
       showToast({
         type: "success",
-        message: "게시글이 수정되었습니다.",
+        message: data.message,
       });
 
-      router.replace(`/posts/${updatedPost.id}`);
+      router.replace(`/posts/${data.post.id}`);
       router.refresh();
-    } catch {
-      openErrorModal("게시글 수정 요청 중 오류가 발생했습니다.");
+    } catch (error) {
+      openErrorModal(
+        getErrorMessage(error, "게시글 수정 요청 중 오류가 발생했습니다."),
+      );
     } finally {
       setFormState((currentState) => ({
         ...currentState,
@@ -209,7 +189,6 @@ export default function PostEditForm({ postId }: PostEditFormProps) {
     }
   };
 
-  // 로딩중
   if (formState.isLoading) {
     return (
       <Card>
@@ -226,7 +205,6 @@ export default function PostEditForm({ postId }: PostEditFormProps) {
     );
   }
 
-  // 내가 쓴 글이 아님
   if (!formState.isAuthor) {
     return (
       <Card>
@@ -246,7 +224,6 @@ export default function PostEditForm({ postId }: PostEditFormProps) {
     );
   }
 
-  // 정상 진입
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
@@ -278,10 +255,13 @@ export default function PostEditForm({ postId }: PostEditFormProps) {
                 }))
               }
               placeholder="게시글 제목을 입력하세요."
+              minLength={POST_TITLE_MIN_LENGTH}
+              maxLength={POST_TITLE_MAX_LENGTH}
             />
 
             <p className="mt-1 text-xs text-muted-foreground">
-              제목은 2자 이상 200자 이하로 입력해주세요.
+              제목은 {POST_TITLE_MIN_LENGTH}자 이상 {POST_TITLE_MAX_LENGTH}자
+              이하로 입력해주세요.
             </p>
           </div>
 
@@ -304,7 +284,7 @@ export default function PostEditForm({ postId }: PostEditFormProps) {
             />
 
             <p className="mt-1 text-xs text-muted-foreground">
-              내용은 2자 이상 입력해주세요.
+              내용은 {POST_CONTENT_MIN_LENGTH}자 이상 입력해주세요.
             </p>
           </div>
 
