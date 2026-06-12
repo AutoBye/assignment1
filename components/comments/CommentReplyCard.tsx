@@ -1,7 +1,8 @@
-import { formatDate } from "@/lib/date";
+import { memo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import CommentEditForm from "@/components/comments/CommentEditForm";
+import CommentMeta from "@/components/comments/CommentMeta";
 import type { CommentItem } from "@/types/comment";
 import { useCurrentUser } from "@/components/providers/CurrentUserProvider";
 
@@ -18,7 +19,7 @@ type CommentReplyCardProps = {
   onEditingContentChange: (content: string) => void;
 };
 
-export function CommentReplyCard({
+export const CommentReplyCard = memo(function CommentReplyCard({
   reply,
   editingCommentId,
   editingContent,
@@ -31,30 +32,33 @@ export function CommentReplyCard({
   onEditingContentChange,
 }: CommentReplyCardProps) {
   const { currentUser } = useCurrentUser();
-  const isReplyAuthor = currentUser?.id === reply.author.id;
-  const isReplyEditing = editingCommentId === reply.id;
-  const isReplyUpdating = updatingCommentId === reply.id;
-  const isReplyDeleting = deletingCommentId === reply.id;
+
+  const isAuthor = currentUser?.id === reply.author.id;
+  const isEditing = editingCommentId === reply.id;
+  const isUpdating = updatingCommentId === reply.id;
+  const isDeleting = deletingCommentId === reply.id;
+
+  const handleStartEdit = useCallback(() => {
+    onStartEdit(reply);
+  }, [onStartEdit, reply]);
+
+  const handleUpdate = useCallback(() => {
+    onUpdate(reply.id);
+  }, [onUpdate, reply.id]);
+
+  const handleDelete = useCallback(() => {
+    onDelete(reply.id);
+  }, [onDelete, reply.id]);
 
   return (
     <Card>
       <CardContent className="p-3">
         <div className="mb-2 flex items-center justify-between gap-3">
-          <div className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">
-              {reply.author.name}
-            </span>
-            <span> · {formatDate(reply.createdAt)}</span>
-          </div>
+          <CommentMeta authorName={reply.author.name} createdAt={reply.createdAt} />
 
-          {isReplyAuthor && !isReplyEditing && (
+          {isAuthor && !isEditing && (
             <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onStartEdit(reply)}
-              >
+              <Button type="button" variant="ghost" size="sm" onClick={handleStartEdit}>
                 수정
               </Button>
 
@@ -62,45 +66,25 @@ export function CommentReplyCard({
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => onDelete(reply.id)}
-                disabled={isReplyDeleting}
+                onClick={handleDelete}
+                disabled={isDeleting}
                 className="text-destructive hover:bg-destructive/10 hover:text-destructive"
               >
-                {isReplyDeleting ? "삭제 중..." : "삭제"}
+                {isDeleting ? "삭제 중..." : "삭제"}
               </Button>
             </div>
           )}
         </div>
 
-        {isReplyEditing ? (
-          <div className="space-y-2">
-            <Textarea
-              value={editingContent}
-              onChange={(event) => onEditingContentChange(event.target.value)}
-              className="min-h-20 resize-y text-sm"
-            />
-
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => onUpdate(reply.id)}
-                disabled={isReplyUpdating}
-              >
-                {isReplyUpdating ? "수정 중..." : "저장"}
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onCancelEdit}
-                disabled={isReplyUpdating}
-              >
-                취소
-              </Button>
-            </div>
-          </div>
+        {isEditing ? (
+          <CommentEditForm
+            content={editingContent}
+            isUpdating={isUpdating}
+            minHeightClassName="min-h-20"
+            onContentChange={onEditingContentChange}
+            onCancel={onCancelEdit}
+            onSubmit={handleUpdate}
+          />
         ) : (
           <p className="whitespace-pre-wrap text-sm text-foreground">
             {reply.content}
@@ -109,4 +93,4 @@ export function CommentReplyCard({
       </CardContent>
     </Card>
   );
-}
+});
